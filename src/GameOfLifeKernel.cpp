@@ -32,7 +32,7 @@ GameOfLifeKernel::GameOfLifeKernel(int rows, int cols, bool withThreads) : rows(
     for (t = 0; t < numberOfThreads; t++) {
         r2 = (r1 + slice < rows) ? r1 + slice : rows-1;
         int rt = r2 - r1;
-        std::cout << "Slices:    " << std::setw(6) << r1 << " - " << r2 << ", " << rt << " rows." << std::endl;
+        std::cout << "Slices:    " << std::setw(4) << r1 << " - " << std::setw(4) << r2 << ", " << std::setw(4) << rt << " rows." << std::endl;
         r1 += slice;
     }
     int remaining = ((rows-2) % numberOfThreads);
@@ -40,7 +40,7 @@ GameOfLifeKernel::GameOfLifeKernel(int rows, int cols, bool withThreads) : rows(
         r1 = rows - 1 - remaining;
         r2 = rows - 1;
         int rt = r2 - r1;
-        std::cout << "Remaining: " << std::setw(6) << r1 << " - " << r2 << ", " << rt << " rows." << std::endl;
+        std::cout << "Remaining: " << std::setw(4) << r1 << " - " << std::setw(4) << r2 << ", " << std::setw(4) << rt << " rows." << std::endl;
     }
 
     
