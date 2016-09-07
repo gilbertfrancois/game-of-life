@@ -4,7 +4,7 @@ This program shows the well known Game of Life. I've chosen this simulation as a
 
 * Member function pointers as argument
 * Problem domain slicing
-* Multi-threading, using all available cores
+* concurrency, using all available cpu cores, without creating and destroying thread objects after each iteration.
 
 
 
