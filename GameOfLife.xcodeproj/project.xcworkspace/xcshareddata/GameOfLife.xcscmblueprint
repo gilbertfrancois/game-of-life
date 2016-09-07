@@ -1,0 +1,30 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "622B90B4753A5CB8058AA8AFC8B8AA900DE32472",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "234635DDBC5B15A42B3D36178F0E7F46054921CA" : 0,
+    "622B90B4753A5CB8058AA8AFC8B8AA900DE32472" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "DB777754-2733-48AF-BA0C-1A7698F8ED9F",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "234635DDBC5B15A42B3D36178F0E7F46054921CA" : "",
+    "622B90B4753A5CB8058AA8AFC8B8AA900DE32472" : "game-of-life\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "GameOfLife",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "GameOfLife.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "bitbucket.org:gilbertfrancois\/of-apps.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "234635DDBC5B15A42B3D36178F0E7F46054921CA"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/bitbucket.org\/gilbertfrancois\/game-of-life.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "622B90B4753A5CB8058AA8AFC8B8AA900DE32472"
+    }
+  ]
+}
