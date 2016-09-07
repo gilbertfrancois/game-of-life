@@ -1,6 +1,7 @@
 # Game of Life
 
 This program shows the well known Game of Life. I've chosen this simulation as an exercise to explore:
+
 * Member function pointers as argument
 * Problem domain slicing
 * Multi-threading, using all available cores
