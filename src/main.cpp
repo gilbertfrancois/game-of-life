@@ -1,3 +1,6 @@
+//
+// Created by Gilbert Francois on 05-09-16.
+//
 #include "ofMain.h"
 #include "ofApp.h"
 

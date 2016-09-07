@@ -1,5 +1,5 @@
 //
-// Created by Gilbert François on 05-09-16.
+// Created by Gilbert Francois on 05-09-16.
 //
 
 #include "GameOfLifeKernel.h"
