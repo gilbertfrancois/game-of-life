@@ -21,7 +21,7 @@ I used Xcode 7 on Mac OS and it needs the OpenFrameworks library, used for the g
 
 **main.cpp**
 
-```
+```c++
 #include <cmath>
 #include "Foo.h"
 
@@ -36,7 +36,7 @@ int main() {
 ```
 
 **Foo.h**
-```
+```c++
 //
 // Created by Gilbert François on 07-09-16.
 //
@@ -65,7 +65,7 @@ public:
 ```
 
 **Foo.cpp**
-```
+```c++
 //
 // Created by Gilbert François on 07-09-16.
 //
