@@ -8,15 +8,15 @@ This program shows the well known Game of Life. I've chosen this simulation as a
 
 
 
-## (Member) function pointers as argument##
+## (Member) function pointers as argument
 If you want to use function pointers as argument, where the function is a member function of a class, you also have to parse a pointer of the instance of the object. On the bottom of the page, there is a small code example showing the different cases for C style and C++ style function pointers.
 
 The Game of Life simulation uses one function method for domain slicing and distributing the work load over the available CPU cores by starting an equal amount of threads. It takes a function pointer as an argument, to enable me to send the function for initial conditions and the function for time stepping to this method.
 
-##Domain slicing##
+## Domain slicing
 The Game of Life simulation can be distributed in many different ways. Since it is a cellular automata, every cell is updated from t_0 -> t_1 fully independently. It only needs the states from its direct neighbours. This code used the domain slicing approach, which can easily be applied to other tasks, like image processing. The domain is divided horizontally in row batches. Each slice is then sent to another thread where its new state is computed. After the computation, the threads are joined and the new state is set as the current state (swap buffers). To prevent excessive memory allocation and destruction for each time step, only the memory range of the slice is given to the threads. All threads share the same memory block. This is fine, since they read the current state from buffer 1 and update only their own part in buffer 2.
 
-#Compile
+# Compile
 I used Xcode 7 on Mac OS and it needs the OpenFrameworks library, used for the graphical output. To compile the source code yourself, you have to adapt the file `Project.xcconfig` and change the environment variables `OF_PATH` and `#include` to the location of OpenFrameworks on your machine.
 
 **main.cpp**
@@ -90,3 +90,7 @@ void Foo::printOutputCppMemberFunctionSelf() {
     printOutputCppMemberFunction(&Foo::add, this, 7, 3);
 }
 ```
+
+## Todo
+- [ ] Remove openFrameworks dependency and rewrite with SDL2.
+- [ ] Support macOS, Linux (and maybe Windows).
