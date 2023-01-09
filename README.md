@@ -1,4 +1,5 @@
 # Game of Life
+_Gilbert Francois Duivesteijn_
 
 This program shows the well known Game of Life. I've chosen this simulation as an exercise to explore:
 
