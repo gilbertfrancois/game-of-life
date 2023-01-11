@@ -11,31 +11,31 @@
 
 #pragma mark - Public
 
-GameOfLifeKernel::GameOfLifeKernel(int rows, int cols, bool withThreads) : rows(rows), cols(cols), withThreads(withThreads) {
+GameOfLifeKernel::GameOfLifeKernel(int rows, int cols, bool with_threads) : rows(rows), cols(cols) {
     
     // Setup concurrency
-    int numberOfCpuCores = std::thread::hardware_concurrency();
-    int mod;
-    if (withThreads) {
-        slice = (rows-2) / numberOfCpuCores;
-        mod = (rows-2) % numberOfCpuCores;
-        numberOfThreads = numberOfCpuCores;
+    int n_cpus = std::thread::hardware_concurrency();
+    int mod = 0;
+    if (with_threads) {
+        slice = (rows-2) / n_cpus;
+        mod = (rows-2) % n_cpus;
+        n_threads = n_cpus;
     } else {
         slice = rows-2;
-        numberOfThreads = 1;
+        n_threads = 1;
     }
-    threads = new std::thread[numberOfThreads];
-    std::cout << "--- Availabe CPU cores: " << numberOfCpuCores << ", using " << numberOfThreads << " cores" << std::endl;
+    threads = new std::thread[n_threads];
+    std::cout << "--- Availabe CPU cores: " << n_cpus << ", using " << n_threads << " cores" << std::endl;
     std::cout << "--- Domain rows: " << rows << ", slice per thread: " << slice << ", Modulo: " << mod << std::endl;
     int t, r1, r2;
     r1 = 1;
-    for (t = 0; t < numberOfThreads; t++) {
+    for (t = 0; t < n_threads; t++) {
         r2 = (r1 + slice < rows) ? r1 + slice : rows-1;
         int rt = r2 - r1;
         std::cout << "Slices:    " << std::setw(4) << r1 << " - " << std::setw(4) << r2 << ", " << std::setw(4) << rt << " rows." << std::endl;
         r1 += slice;
     }
-    int remaining = ((rows-2) % numberOfThreads);
+    int remaining = ((rows-2) % n_threads);
     if (remaining > 0) {
         r1 = rows - 1 - remaining;
         r2 = rows - 1;
@@ -190,15 +190,15 @@ void GameOfLifeKernel::startThreads(void (GameOfLifeKernel::*fn)(int, int), Game
     int r1 = 1;
     int r2 = r1;
     
-    for (t = 0; t < numberOfThreads; t++) {
+    for (t = 0; t < n_threads; t++) {
         r2 = (r1 + slice < rows-1) ? r1 + slice : rows-1;
         threads[t] = std::thread(fn, this, r1, r2);
         r1 += slice;
     }
-    for (t = 0; t < numberOfThreads; t++) {
+    for (t = 0; t < n_threads; t++) {
         threads[t].join();
     }
-    int remaining = ((rows-2) % numberOfThreads);
+    int remaining = ((rows-2) % n_threads);
     if (remaining > 0) {
         r1 = rows - 1 - remaining;
         r2 = rows - 1;

@@ -10,7 +10,7 @@
 
 class GameOfLifeKernel {
 public:
-    GameOfLifeKernel(int rows, int cols, bool widthThreads);
+    GameOfLifeKernel(int rows, int cols, bool with_threads);
 
     virtual ~GameOfLifeKernel();
 
@@ -25,12 +25,11 @@ public:
 private:
     const int rows;
     const int cols;
-    const bool withThreads;
     std::thread *threads;
     int **Xt0;
     int **Xt1;
     int *Xt2;
-    int numberOfThreads;
+    int n_threads;
     int slice;
 
     void initialConditions();
