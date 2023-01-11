@@ -1,13 +1,19 @@
-# Attempt to load a config.make file.
-# If none is found, project defaults in config.project.make will be used.
-ifneq ($(wildcard config.make),)
-	include config.make
-endif
+CPP_FLAGS=--std=c++17 -O2 -Wall
+CPP_DEBUG_FLAGS=--std=c++17 -g -Wall
 
-# make sure the the OF_ROOT location is defined
-ifndef OF_ROOT
-    OF_ROOT=$(realpath ../../OpenFrameworks/libraries/of_v0.9.3_osx_release)
-endif
+# INCLUDE_PATHS=-I/opt/homebrew/include
+# LIB_PATHS=-L/opt/homebrew/lib
+# STATIC_LIB_PREFIX=/opt/homebrew/lib
+INCLUDE_PATHS=-I/usr/local/include
+LIB_PATHS=-L/usr/local/lib
+SOURCES_CLI=src/GameOfLifeKernel.cpp src/main.cpp
 
-# call the project makefile!
-include $(OF_ROOT)/libs/openFrameworksCompiled/project/makefileCommon/compile.project.mk
+cli:
+	mkdir -p build/
+	c++ ${CPP_FLAGS} ${SOURCES_CLI} -o build/game-of-life-cli
+
+cli-debug:
+	mkdir -p build/
+	c++ ${CPP_DEBUG_FLAGS} ${SOURCES_CLI} -o build/game-of-life-cli-debug
+
+

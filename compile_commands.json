@@ -1,0 +1,34 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-c",
+      "--std=c++17",
+      "-O2",
+      "-Wall",
+      "-I/usr/local/include",
+      "-o",
+      "build/gol",
+      "src/GameOfLifeKernel.cpp"
+    ],
+    "directory": "/Users/gilbert/Development/git/game-of-life",
+    "file": "/Users/gilbert/Development/git/game-of-life/src/GameOfLifeKernel.cpp",
+    "output": "/Users/gilbert/Development/git/game-of-life/build/gol"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-c",
+      "--std=c++17",
+      "-O2",
+      "-Wall",
+      "-I/usr/local/include",
+      "-o",
+      "build/gol",
+      "src/main.cpp"
+    ],
+    "directory": "/Users/gilbert/Development/git/game-of-life",
+    "file": "/Users/gilbert/Development/git/game-of-life/src/main.cpp",
+    "output": "/Users/gilbert/Development/git/game-of-life/build/gol"
+  }
+]
