@@ -5,13 +5,32 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <cstdio>
+#include <sys/ioctl.h>
+#include <unistd.h>
 
+// https://www.linuxquestions.org/questions/programming-9/get-width-height-of-a-terminal-window-in-c-810739/
+//
 using namespace std::chrono_literals;
 
 #include "main.h"
 
 int main(int argc, char **argv) {
-
+    int cols1 = 80;
+    int lines = 24;
+#ifdef TIOCGSIZE
+    struct ttysize ts;
+    ioctl(STDIN_FILENO, TIOCGSIZE, &ts);
+    cols1 = ts.ts_cols;
+    lines = ts.ts_lines;
+#elif defined(TIOCGWINSZ)
+    struct winsize ts;
+    ioctl(STDIN_FILENO, TIOCGWINSZ, &ts);
+    cols1 = ts.ws_col;
+    lines = ts.ws_row;
+#endif /* TIOCGSIZE */
+    std::cout << cols1 << " x " << lines << std::endl;
+    return 0;
     // Default values
     int rows = 25;
     int cols = 80;
