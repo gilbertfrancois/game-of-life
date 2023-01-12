@@ -7,6 +7,8 @@ CPP_DEBUG_FLAGS=--std=c++17 -g -Wall
 INCLUDE_PATHS=-I/usr/local/include
 LIB_PATHS=-L/usr/local/lib
 SOURCES_CLI=src/GameOfLifeKernel.cpp src/main.cpp
+COMPILER_FLAGS = `sdl2-config --cflags`
+LINKER_FLAGS = `sdl2-config --libs`
 
 cli:
 	mkdir -p build/
