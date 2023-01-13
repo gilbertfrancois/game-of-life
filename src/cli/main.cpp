@@ -112,7 +112,8 @@ int main(int argc, char **argv) {
         // VT100 compatible escape codes to clear the screen.
         std::cout << "\033[H\033[J";
         // Print the current state of the domain.
-        kernel->printDomain();
+        /* kernel->printDomain(); */
+        std::cout << kernel->to_string(); 
         // Print a status line.
         std::cout << "[ cpus: " << n_cpus << " ]-";
         std::cout << "[ threads: " << n_threads << " ]-";
@@ -121,7 +122,7 @@ int main(int argc, char **argv) {
         std::cout << "[ step: " << i << " / " << config.n_steps - 1 << " ] ";
         std::flush(std::cout);
         // Go one timestep forward.
-        kernel->timeStep();
+        kernel->timestep();
         std::this_thread::sleep_for(1s);
     }
     // Cleanup

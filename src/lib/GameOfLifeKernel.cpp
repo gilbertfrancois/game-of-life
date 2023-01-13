@@ -7,12 +7,10 @@
 #include <iomanip>
 #include <iostream>
 #include <random>
-
-#pragma mark - Public
+#include <sstream>
 
 GameOfLifeKernel::GameOfLifeKernel(int rows, int cols, bool with_threads)
     : rows(rows), cols(cols) {
-
     // Setup concurrency
     n_cpus = std::thread::hardware_concurrency();
     int mod = 0;
@@ -48,27 +46,25 @@ GameOfLifeKernel::GameOfLifeKernel(int rows, int cols, bool with_threads)
                   << std::setw(4) << r2 << ", " << std::setw(4) << rt
                   << " rows." << std::endl;
     }
-
     // Alloc - init domain
-    Xt0 = new int *[rows];
-    Xt1 = new int *[rows];
+    xt0 = new int *[rows];
+    xt1 = new int *[rows];
     for (int i = 0; i < rows; i++) {
-        Xt0[i] = new int[cols];
-        Xt1[i] = new int[cols];
+        xt0[i] = new int[cols];
+        xt1[i] = new int[cols];
     }
-    Xt2 = new int[rows * cols];
-    zeros(Xt0, rows, cols);
-    zeros(Xt1, rows, cols);
-    initialConditions();
+    zeros(xt0, rows, cols);
+    zeros(xt1, rows, cols);
+    set_initial_conditions();
 }
 
 GameOfLifeKernel::~GameOfLifeKernel() {
     for (int i = 0; i < rows; i++) {
-        delete[] Xt0[i];
-        delete[] Xt1[i];
+        delete[] xt0[i];
+        delete[] xt1[i];
     }
-    delete[] Xt0;
-    delete[] Xt1;
+    delete[] xt0;
+    delete[] xt1;
     delete[] threads;
 }
 
@@ -76,132 +72,123 @@ int GameOfLifeKernel::get_n_cpus() { return n_cpus; }
 
 int GameOfLifeKernel::get_n_threads() { return n_threads; }
 
-void GameOfLifeKernel::printDomain() {
+std::string GameOfLifeKernel::to_string() {
+    std::stringstream ss;
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
 
-            std::cout << ((Xt0[i][j] == 1) ? CELL_ALIVE : CELL_DEAD);
+            ss << ((xt0[i][j] == 1) ? CELL_ALIVE : CELL_DEAD);
         }
-        std::cout << std::endl;
+        ss << std::endl;
     }
-    /* std::cout << std::endl; */
+    return ss.str();
 }
 
-void GameOfLifeKernel::timeStep() {
-
+void GameOfLifeKernel::timestep() {
     // compute inner domain
-    startThreads(&GameOfLifeKernel::timeStepInnerDomainSlice, this);
-
+    start_threads(&GameOfLifeKernel::timestep_inner_subdomain, this);
     // compute boundaries
-    timestepBoundaries();
-
+    timestep_boundaries();
     // swap buffers
-    int **tmp = Xt0;
-    Xt0 = Xt1;
-    Xt1 = tmp;
+    int **tmp = xt0;
+    xt0 = xt1;
+    xt1 = tmp;
 }
 
-const int GameOfLifeKernel::getXtAt(int row, int col) {
-    return row > 0 && row < rows && col > 0 && col < cols ? Xt0[row][col] : -1;
+const int GameOfLifeKernel::get_xt_at(int row, int col) {
+    return row > 0 && row < rows && col > 0 && col < cols ? xt0[row][col] : -1;
 }
 
-int **GameOfLifeKernel::getXt0() const { return Xt0; }
+int **GameOfLifeKernel::get_xt_0() const { return xt0; }
 
-#pragma mark - Private
-
-void GameOfLifeKernel::initialConditions() {
-
-    startThreads(&GameOfLifeKernel::initialConditionsDomainSlice, this);
+void GameOfLifeKernel::set_initial_conditions() {
+    /* start_threads(&GameOfLifeKernel::set_initial_conditions_in_subdomain, this); */
+    set_initial_conditions_in_subdomain(0, rows);
 }
 
-void GameOfLifeKernel::initialConditionsDomainSlice(const int minRow,
-                                                    const int maxRow) {
-    for (int i = minRow; i < maxRow; i++) {
+void GameOfLifeKernel::set_initial_conditions_in_subdomain(const int min_row,
+                                                           const int max_row) {
+    for (int i = min_row; i < max_row; i++) {
         for (int j = 0; j < cols; j++) {
-            Xt0[i][j] = randMinMax(0, 1);
+            xt0[i][j] = rand_minmax(0, 1);
         }
     }
 }
 
-void GameOfLifeKernel::timeStepInnerDomainSlice(const int minRow,
-                                                const int maxRow) {
-
+void GameOfLifeKernel::timestep_inner_subdomain(const int min_row,
+                                                const int max_row) {
     // Loop over inner domain
-    for (int i = minRow; i < maxRow; i++) {
+    for (int i = min_row; i < max_row; i++) {
         for (int j = 1; j < cols - 1; j++) {
-            int sum = Xt0[i - 1][j + 1] + Xt0[i][j + 1] + Xt0[i + 1][j + 1] +
-                      Xt0[i - 1][j] + Xt0[i + 1][j] + Xt0[i - 1][j - 1] +
-                      Xt0[i][j - 1] + Xt0[i + 1][j - 1];
+            int sum = xt0[i - 1][j + 1] + xt0[i][j + 1] + xt0[i + 1][j + 1] +
+                      xt0[i - 1][j] + xt0[i + 1][j] + xt0[i - 1][j - 1] +
+                      xt0[i][j - 1] + xt0[i + 1][j - 1];
             fx(i, j, sum);
         }
     }
 }
 
-void GameOfLifeKernel::timestepBoundaries() {
-
+void GameOfLifeKernel::timestep_boundaries() {
     int i, j, sum;
-
     // compute edges
     for (i = 1; i < rows - 1; i++) {
         j = 0;
-        sum = Xt0[i - 1][j + 1] + Xt0[i][j + 1] + Xt0[i + 1][j + 1] +
-              Xt0[i - 1][0] + Xt0[i + 1][0];
+        sum = xt0[i - 1][j + 1] + xt0[i][j + 1] + xt0[i + 1][j + 1] +
+              xt0[i - 1][0] + xt0[i + 1][0];
         fx(i, j, sum);
         j = cols - 1;
-        sum = Xt0[i - 1][j] + Xt0[i + 1][j] + Xt0[i - 1][j - 1] +
-              Xt0[i][j - 1] + Xt0[i + 1][j - 1];
+        sum = xt0[i - 1][j] + xt0[i + 1][j] + xt0[i - 1][j - 1] +
+              xt0[i][j - 1] + xt0[i + 1][j - 1];
         fx(i, j, sum);
     }
     for (j = 1; j < cols - 1; j++) {
         i = 0;
-        sum = Xt0[i][j + 1] + Xt0[i + 1][j + 1] + Xt0[i + 1][j] +
-              Xt0[i][j - 1] + Xt0[i + 1][j - 1];
+        sum = xt0[i][j + 1] + xt0[i + 1][j + 1] + xt0[i + 1][j] +
+              xt0[i][j - 1] + xt0[i + 1][j - 1];
         fx(i, j, sum);
         i = rows - 1;
-        sum = Xt0[i - 1][j + 1] + Xt0[i][j + 1] + Xt0[i - 1][j] +
-              Xt0[i - 1][j - 1] + Xt0[i][j - 1];
+        sum = xt0[i - 1][j + 1] + xt0[i][j + 1] + xt0[i - 1][j] +
+              xt0[i - 1][j - 1] + xt0[i][j - 1];
         fx(i, j, sum);
     }
     // compute corners
     i = 0;
     j = 0;
-    sum = Xt0[i][j + 1] + Xt0[i + 1][j + 1] + Xt0[i + 1][j];
+    sum = xt0[i][j + 1] + xt0[i + 1][j + 1] + xt0[i + 1][j];
     fx(i, j, sum);
     i = 0;
     j = cols - 1;
-    sum = Xt0[i][j - 1] + Xt0[i + 1][j - 1] + Xt0[i + 1][j];
+    sum = xt0[i][j - 1] + xt0[i + 1][j - 1] + xt0[i + 1][j];
     fx(i, j, sum);
     i = rows - 1;
     j = cols - 1;
-    sum = Xt0[i - 1][j] + Xt0[i - 1][j - 1] + Xt0[i][j - 1];
+    sum = xt0[i - 1][j] + xt0[i - 1][j - 1] + xt0[i][j - 1];
     fx(i, j, sum);
     i = rows - 1;
     j = 0;
-    sum = Xt0[i - 1][j + 1] + Xt0[i][j + 1] + Xt0[i - 1][j];
+    sum = xt0[i - 1][j + 1] + xt0[i][j + 1] + xt0[i - 1][j];
     fx(i, j, sum);
 }
 
 void GameOfLifeKernel::fx(const int i, const int j, const int sum) {
-    if (Xt0[i][j] == 1 && sum < 2) {
-        Xt1[i][j] = 0;
-    } else if (Xt0[i][j] == 1 && sum >= 2 && sum <= 3) {
-        Xt1[i][j] = 1;
-    } else if (Xt0[i][j] == 1 && sum > 3) {
-        Xt1[i][j] = 0;
-    } else if (Xt0[i][j] == 0 && sum == 3) {
-        Xt1[i][j] = 1;
+    if (xt0[i][j] == 1 && sum < 2) {
+        xt1[i][j] = 0;
+    } else if (xt0[i][j] == 1 && sum >= 2 && sum <= 3) {
+        xt1[i][j] = 1;
+    } else if (xt0[i][j] == 1 && sum > 3) {
+        xt1[i][j] = 0;
+    } else if (xt0[i][j] == 0 && sum == 3) {
+        xt1[i][j] = 1;
     } else {
-        Xt1[i][j] = 0;
+        xt1[i][j] = 0;
     }
 }
 
-void GameOfLifeKernel::startThreads(void (GameOfLifeKernel::*fn)(int, int),
-                                    GameOfLifeKernel *gameOfLifeKernel) {
-
+void GameOfLifeKernel::start_threads(void (GameOfLifeKernel::*fn)(int, int),
+                                     GameOfLifeKernel *gameOfLifeKernel) {
     int t;
     int r1 = 1;
     int r2 = r1;
-
     for (t = 0; t < n_threads; t++) {
         r2 = (r1 + slice < rows - 1) ? r1 + slice : rows - 1;
         threads[t] = std::thread(fn, this, r1, r2);
@@ -221,7 +208,7 @@ void GameOfLifeKernel::startThreads(void (GameOfLifeKernel::*fn)(int, int),
     }
 }
 
-int GameOfLifeKernel::randMinMax(int min, int max) {
+int GameOfLifeKernel::rand_minmax(int min, int max) {
     static std::default_random_engine e{};
     static std::uniform_int_distribution<int> d{min, max};
     return d(e);
