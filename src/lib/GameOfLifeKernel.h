@@ -5,6 +5,7 @@
 #ifndef GAMEOFLIFE_GAMEOFLIFEKERNEL_H
 #define GAMEOFLIFE_GAMEOFLIFEKERNEL_H
 
+#include <string>
 #include <thread>
 
 #define CELL_ALIVE "O"
@@ -20,39 +21,37 @@ class GameOfLifeKernel {
 
     int get_n_cpus();
 
-    void printDomain();
+    std::string to_string();
 
-    void timeStep();
+    void timestep();
 
-    const int getXtAt(int row, int col);
+    const int get_xt_at(int row, int col);
 
-    int **getXt0() const;
+    int **get_xt_0() const;
 
   private:
     const int rows;
     const int cols;
     std::thread *threads;
-    int **Xt0;
-    int **Xt1;
-    int *Xt2;
+    int **xt0;
+    int **xt1;
     int n_threads;
     int n_cpus;
     int slice;
 
-    void initialConditions();
+    void set_initial_conditions();
 
-    void initialConditionsDomainSlice(const int minRow, const int maxRow);
+    void set_initial_conditions_in_subdomain(const int min_row, const int max_row);
 
-    void timeStepInnerDomainSlice(const int minRow, const int maxRow);
+    void timestep_inner_subdomain(const int min_row, const int max_row);
 
-    void timestepBoundaries();
+    void timestep_boundaries();
 
     void fx(const int i, const int j, const int sum);
 
-    void startThreads(void (GameOfLifeKernel::*fn)(int, int),
-                      GameOfLifeKernel *gameOfLifeKernel);
+    void start_threads(void (GameOfLifeKernel::*fn)(int, int), GameOfLifeKernel *kernel);
 
-    int randMinMax(int min, int max);
+    int rand_minmax(int min, int max);
 
     void zeros(int **X, const int rows, const int cols);
 };
