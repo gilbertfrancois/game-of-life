@@ -42,7 +42,7 @@ void get_terminal_size(Config *config) {
     }
     // Don't allow a illegal size.
     if (config->rows <= 0) {
-        config->rows = 24;
+        config->rows = 29;
     }
     if (config->cols <= 0) {
         config->cols = 80;
@@ -62,7 +62,7 @@ int parse_arguments(std::vector<std::string> args, Config *config) {
                 << "-----------------------------------------------------------"
                    "---------------------"
                 << std::endl;
-            std::cout << "gol-cli" << std::endl;
+            std::cout << "game-of-life-cli" << std::endl;
             std::cout << "   --width <number>      : width of the domain, "
                          "default is current terminal width."
                       << std::endl;
@@ -74,7 +74,7 @@ int parse_arguments(std::vector<std::string> args, Config *config) {
                 << std::endl;
             std::cout << "   -h, --help            : info and help message."
                       << std::endl;
-            return 0;
+            exit(0);
         } else if (*i == "--width") {
             config->cols = stoi(*++i);
         } else if (*i == "--height") {
@@ -128,5 +128,5 @@ int main(int argc, char **argv) {
     // Cleanup
     delete kernel;
 
-    return 0;
+    exit(0);
 }
