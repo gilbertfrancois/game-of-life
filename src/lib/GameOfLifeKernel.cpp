@@ -56,7 +56,6 @@ std::string GameOfLifeKernel::to_string() {
     std::stringstream ss;
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
-
             ss << ((xt0[i][j] == 1) ? CELL_ALIVE : CELL_DEAD);
         }
         ss << std::endl;
@@ -99,6 +98,8 @@ void GameOfLifeKernel::timestep_inner_subdomain(const int min_row,
                                                 const int max_row) {
     // Loop over inner domain
     for (int i = min_row; i < max_row; i++) {
+        if (i == 0 || i >= rows-1)
+            continue;
         for (int j = 1; j < cols - 1; j++) {
             int sum = xt0[i - 1][j + 1] + xt0[i][j + 1] + xt0[i + 1][j + 1] +
                       xt0[i - 1][j] + xt0[i + 1][j] + xt0[i - 1][j - 1] +
@@ -169,10 +170,10 @@ void GameOfLifeKernel::start_threads(void (GameOfLifeKernel::*fn)(int, int),
 
     for (int i=0; i<batches.size(); i++) {
         int r1 = std::get<0>(batches[i]);
-        int r2 = std::get<0>(batches[i]);
+        int r2 = std::get<1>(batches[i]);
         threads[i] = std::thread(fn, this, r1, r2);
     }
-    for (int i = 0; i < n_threads; i++) {
+    for (int i = 0; i < batches.size(); i++) {
         threads[i].join();
     }
 }

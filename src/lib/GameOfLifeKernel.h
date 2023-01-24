@@ -37,7 +37,6 @@ class GameOfLifeKernel {
     std::thread *threads;
     int **xt0;
     int **xt1;
-    int n_threads;
     int n_cpus;
 
     std::vector<std::tuple<int, int>> batches;
