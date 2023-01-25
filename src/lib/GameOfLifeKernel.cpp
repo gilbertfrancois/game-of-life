@@ -8,9 +8,10 @@
 #include <iostream>
 #include <random>
 #include <sstream>
+#include <assert.h>
 
 GameOfLifeKernel::GameOfLifeKernel(int rows, int cols, bool with_threads)
-    : rows(rows), cols(cols) {
+    : rows(rows), cols(cols), with_threads(with_threads) {
     // Setup concurrency
     n_cpus = std::thread::hardware_concurrency();
     if (with_threads) {
@@ -19,12 +20,12 @@ GameOfLifeKernel::GameOfLifeKernel(int rows, int cols, bool with_threads)
         batch_ranges(rows, 1);
     }
     threads = new std::thread[batches.size()];
-    std::cout << "--- Availabe CPU cores: " << n_cpus << ", using " << batches.size()
-              << " threads." << std::endl;
+    std::cout << "--- Availabe CPU cores: " << n_cpus << ", using "
+              << batches.size() << " threads." << std::endl;
     for (int t = 0; t < batches.size(); t++) {
         auto batch = batches.at(t);
-        std::cout << "Slices:    " << std::setw(4) << std::get<0>(batch) << " - "
-                  << std::setw(4) << std::get<1>(batch) << std::endl;
+        std::cout << "Slices:    " << std::setw(4) << std::get<0>(batch)
+                  << " - " << std::setw(4) << std::get<1>(batch) << std::endl;
     }
     // Alloc - init domain
     xt0 = new int *[rows];
@@ -65,7 +66,11 @@ std::string GameOfLifeKernel::to_string() {
 
 void GameOfLifeKernel::timestep() {
     // compute inner domain
-    start_threads(&GameOfLifeKernel::timestep_inner_subdomain, this);
+    if (with_threads) {
+        start_threads(&GameOfLifeKernel::timestep_inner_subdomain, this);
+    } else {
+        start_no_threads(&GameOfLifeKernel::timestep_inner_subdomain, this);
+    }
     // compute boundaries
     timestep_boundaries();
     // swap buffers
@@ -81,7 +86,6 @@ const int GameOfLifeKernel::get_xt_at(int row, int col) {
 int **GameOfLifeKernel::get_xt() const { return xt0; }
 
 void GameOfLifeKernel::set_initial_conditions() {
-    /* start_threads(&GameOfLifeKernel::set_initial_conditions_in_subdomain, this); */
     set_initial_conditions_in_subdomain(0, rows);
 }
 
@@ -98,7 +102,7 @@ void GameOfLifeKernel::timestep_inner_subdomain(const int min_row,
                                                 const int max_row) {
     // Loop over inner domain
     for (int i = min_row; i < max_row; i++) {
-        if (i == 0 || i >= rows-1)
+        if (i == 0 || i >= rows - 1)
             continue;
         for (int j = 1; j < cols - 1; j++) {
             int sum = xt0[i - 1][j + 1] + xt0[i][j + 1] + xt0[i + 1][j + 1] +
@@ -152,23 +156,37 @@ void GameOfLifeKernel::timestep_boundaries() {
 }
 
 void GameOfLifeKernel::fx(const int i, const int j, const int sum) {
-    if (xt0[i][j] == 1 && sum < 2) {
-        xt1[i][j] = 0;
-    } else if (xt0[i][j] == 1 && sum >= 2 && sum <= 3) {
-        xt1[i][j] = 1;
-    } else if (xt0[i][j] == 1 && sum > 3) {
-        xt1[i][j] = 0;
-    } else if (xt0[i][j] == 0 && sum == 3) {
-        xt1[i][j] = 1;
-    } else {
-        xt1[i][j] = 0;
+    int value = xt0[i][j];
+    int new_value = -1;
+    if (value == 0) {
+        if (sum == 3)
+            new_value = 1;
+        else 
+            new_value = 0;
     }
+    else if (value == 1) {
+        if (sum < 2)
+            new_value = 0;
+        else if (sum >= 2 && sum <= 3)
+            new_value = 1;
+        else if (sum > 3)
+            new_value = 0;
+    }
+    assert(new_value != -1);
+    xt1[i][j] = new_value;
+}
+
+void GameOfLifeKernel::start_no_threads(void (GameOfLifeKernel::*fn)(int, int),
+                                        GameOfLifeKernel *gameOfLifeKernel) {
+
+    std::tuple<int, int> batch = batches.at(0); 
+    (gameOfLifeKernel->*fn)(std::get<0>(batch), std::get<1>(batch));
 }
 
 void GameOfLifeKernel::start_threads(void (GameOfLifeKernel::*fn)(int, int),
                                      GameOfLifeKernel *gameOfLifeKernel) {
 
-    for (int i=0; i<batches.size(); i++) {
+    for (int i = 0; i < batches.size(); i++) {
         int r1 = std::get<0>(batches[i]);
         int r2 = std::get<1>(batches[i]);
         threads[i] = std::thread(fn, this, r1, r2);
@@ -193,11 +211,17 @@ void GameOfLifeKernel::zeros(int **X, const int rows, const int cols) {
 }
 
 void GameOfLifeKernel::batch_ranges(int n_samples, int n_batches) {
+    // Don't try to make more batches than the total number of samples.
+    if (n_batches >= n_samples - 2) {
+        n_batches = n_samples - 2; 
+    }
     int batch_size = n_samples / n_batches;
-    for (int i=0; i<n_batches; i++) {
-        batches.push_back(std::tuple<int, int>{i*batch_size, (i+1)*batch_size});
+    for (int i = 0; i < n_batches; i++) {
+        batches.push_back(
+            std::tuple<int, int>{i * batch_size, (i + 1) * batch_size});
     }
     if (batch_size * n_batches - n_samples != 0) {
-        batches.push_back(std::tuple<int, int>{(batch_size * n_batches), n_samples});
+        batches.push_back(
+            std::tuple<int, int>{(batch_size * n_batches), n_samples});
     }
 }

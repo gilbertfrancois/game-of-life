@@ -72,6 +72,12 @@ int parse_arguments(std::vector<std::string> args, Config *config) {
             std::cout
                 << "   --steps <number>      : number of steps, default = 1000."
                 << std::endl;
+            std::cout
+                << "   --without-threads     : compute single threaded."
+                << std::endl;
+            std::cout
+                << "   --with-threads        : compute multi-threaded."
+                << std::endl;
             std::cout << "   -h, --help            : info and help message."
                       << std::endl;
             exit(0);
@@ -81,6 +87,10 @@ int parse_arguments(std::vector<std::string> args, Config *config) {
             config->rows = stoi(*++i);
         } else if (*i == "--steps") {
             config->n_steps = stoi(*++i);
+        } else if (*i == "--without-threads") {
+            config->with_threads = false;
+        } else if (*i == "--with-threads") {
+            config->with_threads = true;
         }
     }
     return 0;
@@ -91,7 +101,7 @@ int main(int argc, char **argv) {
     Config config;
     config.cols = 1;
     config.rows = 1;
-    config.n_steps = 100;
+    config.n_steps = 1000;
     config.with_threads = true;
     // Parse arguments
     std::vector<std::string> args(argv + 1, argv + argc);
@@ -123,7 +133,7 @@ int main(int argc, char **argv) {
         std::flush(std::cout);
         // Go one timestep forward.
         kernel->timestep();
-        std::this_thread::sleep_for(1s);
+        std::this_thread::sleep_for(0.1s);
     }
     // Cleanup
     delete kernel;
