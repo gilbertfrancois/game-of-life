@@ -6,9 +6,9 @@
 #define GAMEOFLIFE_GAMEOFLIFEKERNEL_H
 
 #include <string>
-#include <vector>
-#include <tuple>
 #include <thread>
+#include <tuple>
+#include <vector>
 
 #define CELL_ALIVE "O"
 #define CELL_DEAD " "
@@ -34,6 +34,7 @@ class GameOfLifeKernel {
   private:
     const int rows;
     const int cols;
+    const bool with_threads;
     std::thread *threads;
     int **xt0;
     int **xt1;
@@ -51,6 +52,9 @@ class GameOfLifeKernel {
     void timestep_boundaries();
 
     void fx(const int i, const int j, const int sum);
+
+    void start_no_threads(void (GameOfLifeKernel::*fn)(int, int),
+                          GameOfLifeKernel *kernel);
 
     void start_threads(void (GameOfLifeKernel::*fn)(int, int),
                        GameOfLifeKernel *kernel);
