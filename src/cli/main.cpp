@@ -4,23 +4,33 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
-#include <sys/ioctl.h>
 #include <thread>
-#include <unistd.h>
 #include <vector>
+#ifdef _WIN32
+#include <Windows.h>
+#else
+#include <sys/ioctl.h>
+#include <unistd.h>
+#endif
+
+#include "main.h"
 
 // https://www.linuxquestions.org/questions/programming-9/get-width-height-of-a-terminal-window-in-c-810739/
 //
 using namespace std::chrono_literals;
 
-#include "main.h"
 
 void get_terminal_size(Config *config) {
     int arg_rows = config->rows;
     int arg_cols = config->cols;
     int term_rows = 0;
     int term_cols = 0;
-#ifdef TIOCGSIZE
+#ifdef _WIN32
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+    term_cols = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+    term_rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+#elif TIOCGSIZE
     struct ttysize ts;
     ioctl(STDIN_FILENO, TIOCGSIZE, &ts);
     term_cols = ts.ts_cols;
