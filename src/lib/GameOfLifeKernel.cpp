@@ -2,13 +2,13 @@
 // Created by Gilbert Francois on 05-09-16.
 //
 
-#include "GameOfLifeKernel.h"
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <random>
 #include <sstream>
 #include <assert.h>
+#include "GameOfLifeKernel.h"
 
 GameOfLifeKernel::GameOfLifeKernel(int rows, int cols, bool with_threads)
     : rows(rows), cols(cols), with_threads(with_threads) {
@@ -24,7 +24,7 @@ GameOfLifeKernel::GameOfLifeKernel(int rows, int cols, bool with_threads)
               << batches.size() << " threads." << std::endl;
     for (int t = 0; t < batches.size(); t++) {
         auto batch = batches.at(t);
-        std::cout << "Slices:    " << std::setw(4) << std::get<0>(batch)
+        std::cout << "batch " << std::setw(2) << t << ":    " << std::setw(4) << std::get<0>(batch)
                   << " - " << std::setw(4) << std::get<1>(batch) << std::endl;
     }
     // Alloc - init domain
@@ -164,7 +164,7 @@ void GameOfLifeKernel::fx(const int i, const int j, const int sum) {
         else 
             new_value = 0;
     }
-    else if (value == 1) {
+    if (value == 1) {
         if (sum < 2)
             new_value = 0;
         else if (sum >= 2 && sum <= 3)
