@@ -8,5 +8,5 @@ add_executable(game-of-life-gui
     )
 
 # Link SDL2::Main, SDL2::Image and SDL2::GFX to our project
-# target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES})
-target_link_libraries(game-of-life-gui SDL2::SDL2 SDL2::SDL2main)
+target_link_libraries(game-of-life-gui ${SDL2_LIBRARIES})
+# target_link_libraries(game-of-life-gui SDL2::SDL2 SDL2::SDL2main)
