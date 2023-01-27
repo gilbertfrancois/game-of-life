@@ -3,3 +3,6 @@
 build
 xcuserdata
 .vs
+/3rdparty/sdl2
+/CMakeSettings.json
+/out
