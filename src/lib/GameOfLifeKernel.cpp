@@ -73,7 +73,7 @@ void GameOfLifeKernel::timestep() {
         start_no_threads(&GameOfLifeKernel::timestep_inner_subdomain, this);
     }
     // compute boundaries
-    timestep_boundaries();
+    timestep_boundaries_circular();
     // swap buffers
     int **tmp = xt0;
     xt0 = xt1;
@@ -121,7 +121,59 @@ void GameOfLifeKernel::timestep_inner_subdomain(const int min_row,
         }
     }
 }
-void GameOfLifeKernel::timestep_boundaries_circular() {}
+void GameOfLifeKernel::timestep_boundaries_circular() {
+    int i, j, sum = 0;
+    // compute edges
+    for (i = 1; i < rows - 1; i++) {
+        j = 0;
+        sum = xt0[i-1][cols-1] + xt0[i-1][j] + xt0[i-1][j+1] + 
+              xt0[i  ][cols-1] +               xt0[i  ][j+1] +
+              xt0[i+1][cols-1] + xt0[i+1][j] + xt0[i+1][j+1];
+        fx(i, j, sum);
+        j = cols - 1;
+        sum = xt0[i-1][j-1] + xt0[i-1][j] + xt0[i-1][0] + 
+              xt0[i  ][j-1] +               xt0[i  ][0] +
+              xt0[i+1][j-1] + xt0[i+1][j] + xt0[i+1][0];
+        fx(i, j, sum);
+    }
+    for (j = 1; j < cols - 1; j++) {
+        i = 0;
+        sum = xt0[rows-1][j-1] + xt0[rows-1][j] + xt0[rows-1][j+1] + 
+              xt0[i  ][j-1] +               xt0[i  ][j+1] +
+              xt0[i+1][j-1] + xt0[i+1][j] + xt0[i+1][j+1];
+        fx(i, j, sum);
+        i = rows - 1;
+        sum = xt0[i-1][j-1] + xt0[i-1][j] + xt0[i-1][j+1] + 
+              xt0[i  ][j-1] +               xt0[i  ][j+1] +
+              xt0[0][j-1] + xt0[0][j] + xt0[0][j+1];
+        fx(i, j, sum);
+    }
+    // compute corners
+    i = 0;
+    j = 0;
+    sum = xt0[rows-1][cols-1] + xt0[rows-1][j] + xt0[rows-1][j+1] + 
+          xt0[i  ][cols-1] +               xt0[i  ][j+1] +
+          xt0[i+1][cols-1] + xt0[i+1][j] + xt0[i+1][j+1];
+    fx(i, j, sum);
+    i = 0;
+    j = cols - 1;
+    sum = xt0[rows-1][j-1] + xt0[rows-1][j] + xt0[rows-1][0] + 
+          xt0[i  ][j-1] +               xt0[i  ][0] +
+          xt0[i+1][j-1] + xt0[i+1][j] + xt0[i+1][0];
+    fx(i, j, sum);
+    i = rows - 1;
+    j = 0;
+    sum = xt0[i-1][cols-1] + xt0[i-1][j] + xt0[i-1][j+1] + 
+          xt0[i  ][cols-1] +               xt0[i  ][j+1] +
+          xt0[0][cols-1] + xt0[0][j] + xt0[0][j+1];
+    fx(i, j, sum);
+    i = rows - 1;
+    j = cols - 1;
+    sum = xt0[i-1][j-1] + xt0[i-1][j] + xt0[i-1][0] + 
+          xt0[i  ][j-1] +               xt0[i  ][0] +
+          xt0[0][j-1] + xt0[0][j] + xt0[0][0];
+    fx(i, j, sum);
+}
 
 void GameOfLifeKernel::timestep_boundaries() {
     int i, j, sum = 0;
@@ -166,7 +218,7 @@ void GameOfLifeKernel::timestep_boundaries() {
                         xt0[i  ][j+1];
     fx(i, j, sum);
     i = rows - 1;
-    j = 0;
+    j = cols - 1;
     sum = xt0[i-1][j-1] + xt0[i-1][j] +
           xt0[i  ][j-1];             
     fx(i, j, sum);
