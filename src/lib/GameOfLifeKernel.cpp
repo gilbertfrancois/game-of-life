@@ -2,13 +2,13 @@
 // Created by Gilbert Francois on 05-09-16.
 //
 
+#include "GameOfLifeKernel.h"
+#include <assert.h>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <random>
 #include <sstream>
-#include <assert.h>
-#include "GameOfLifeKernel.h"
 
 GameOfLifeKernel::GameOfLifeKernel(int rows, int cols, bool with_threads)
     : rows(rows), cols(cols), with_threads(with_threads) {
@@ -24,8 +24,9 @@ GameOfLifeKernel::GameOfLifeKernel(int rows, int cols, bool with_threads)
               << batches.size() << " threads." << std::endl;
     for (int t = 0; t < batches.size(); t++) {
         auto batch = batches.at(t);
-        std::cout << "batch " << std::setw(2) << t << ":    " << std::setw(4) << std::get<0>(batch)
-                  << " - " << std::setw(4) << std::get<1>(batch) << std::endl;
+        std::cout << "batch " << std::setw(2) << t << ":    " << std::setw(4)
+                  << std::get<0>(batch) << " - " << std::setw(4)
+                  << std::get<1>(batch) << std::endl;
     }
     // Alloc - init domain
     xt0 = new int *[rows];
@@ -91,67 +92,83 @@ void GameOfLifeKernel::set_initial_conditions() {
 
 void GameOfLifeKernel::set_initial_conditions_in_subdomain(const int min_row,
                                                            const int max_row) {
+    int sum = 0;
     for (int i = min_row; i < max_row; i++) {
         for (int j = 0; j < cols; j++) {
             xt0[i][j] = rand_minmax(0, 1);
+            sum += xt0[i][j];
         }
     }
+    float fraction = (float) sum / (rows*cols);
+    std::cout << "Initial distribution: " << fraction << std::endl;
 }
 
 void GameOfLifeKernel::timestep_inner_subdomain(const int min_row,
                                                 const int max_row) {
     // Loop over inner domain
+    int min_col = 0;
+    int max_col = cols - 1;
     for (int i = min_row; i < max_row; i++) {
         if (i == 0 || i >= rows - 1)
             continue;
-        for (int j = 1; j < cols - 1; j++) {
-            int sum = xt0[i - 1][j + 1] + xt0[i][j + 1] + xt0[i + 1][j + 1] +
-                      xt0[i - 1][j] + xt0[i + 1][j] + xt0[i - 1][j - 1] +
-                      xt0[i][j - 1] + xt0[i + 1][j - 1];
+        for (int j = min_col; j < max_col; j++) {
+            if (j == 0 || j >= cols - 1)
+                continue;
+            int sum = xt0[i-1][j-1] + xt0[i-1][j] + xt0[i-1][j+1] + 
+                      xt0[i  ][j-1] +               xt0[i  ][j+1] +
+                      xt0[i+1][j-1] + xt0[i+1][j] + xt0[i+1][j+1];
             fx(i, j, sum);
         }
     }
 }
+void GameOfLifeKernel::timestep_boundaries_circular() {}
 
 void GameOfLifeKernel::timestep_boundaries() {
-    int i, j, sum;
+    int i, j, sum = 0;
     // compute edges
     for (i = 1; i < rows - 1; i++) {
         j = 0;
-        sum = xt0[i - 1][j + 1] + xt0[i][j + 1] + xt0[i + 1][j + 1] +
-              xt0[i - 1][0] + xt0[i + 1][0];
+        sum = xt0[i-1][j] + xt0[i-1][j+1] + 
+                            xt0[i  ][j+1] +
+              xt0[i+1][j] + xt0[i+1][j+1];
         fx(i, j, sum);
         j = cols - 1;
-        sum = xt0[i - 1][j] + xt0[i + 1][j] + xt0[i - 1][j - 1] +
-              xt0[i][j - 1] + xt0[i + 1][j - 1];
+        sum = xt0[i-1][j-1] + xt0[i-1][j] + 
+              xt0[i  ][j-1] +               
+              xt0[i+1][j-1] + xt0[i+1][j];
         fx(i, j, sum);
     }
     for (j = 1; j < cols - 1; j++) {
         i = 0;
-        sum = xt0[i][j + 1] + xt0[i + 1][j + 1] + xt0[i + 1][j] +
-              xt0[i][j - 1] + xt0[i + 1][j - 1];
+        sum = xt0[i  ][j-1] +               xt0[i  ][j+1] +
+              xt0[i+1][j-1] + xt0[i+1][j] + xt0[i+1][j+1];
         fx(i, j, sum);
         i = rows - 1;
-        sum = xt0[i - 1][j + 1] + xt0[i][j + 1] + xt0[i - 1][j] +
-              xt0[i - 1][j - 1] + xt0[i][j - 1];
+        sum = xt0[i-1][j-1] + xt0[i-1][j] + xt0[i-1][j+1] + 
+              xt0[i  ][j-1] +               xt0[i  ][j+1];
+                  
         fx(i, j, sum);
     }
     // compute corners
     i = 0;
     j = 0;
-    sum = xt0[i][j + 1] + xt0[i + 1][j + 1] + xt0[i + 1][j];
+    sum =               xt0[i  ][j+1] +
+          xt0[i+1][j] + xt0[i+1][j+1];
     fx(i, j, sum);
     i = 0;
     j = cols - 1;
-    sum = xt0[i][j - 1] + xt0[i + 1][j - 1] + xt0[i + 1][j];
-    fx(i, j, sum);
-    i = rows - 1;
-    j = cols - 1;
-    sum = xt0[i - 1][j] + xt0[i - 1][j - 1] + xt0[i][j - 1];
+    sum = xt0[i  ][j-1] + 
+          xt0[i+1][j-1] + xt0[i+1][j];
     fx(i, j, sum);
     i = rows - 1;
     j = 0;
-    sum = xt0[i - 1][j + 1] + xt0[i][j + 1] + xt0[i - 1][j];
+    sum = xt0[i-1][j] + xt0[i-1][j+1] + 
+                        xt0[i  ][j+1];
+    fx(i, j, sum);
+    i = rows - 1;
+    j = 0;
+    sum = xt0[i-1][j-1] + xt0[i-1][j] +
+          xt0[i  ][j-1];             
     fx(i, j, sum);
 }
 
@@ -161,7 +178,7 @@ void GameOfLifeKernel::fx(const int i, const int j, const int sum) {
     if (value == 0) {
         if (sum == 3)
             new_value = 1;
-        else 
+        else
             new_value = 0;
     }
     if (value == 1) {
@@ -179,7 +196,7 @@ void GameOfLifeKernel::fx(const int i, const int j, const int sum) {
 void GameOfLifeKernel::start_no_threads(void (GameOfLifeKernel::*fn)(int, int),
                                         GameOfLifeKernel *gameOfLifeKernel) {
 
-    std::tuple<int, int> batch = batches.at(0); 
+    std::tuple<int, int> batch = batches.at(0);
     (gameOfLifeKernel->*fn)(std::get<0>(batch), std::get<1>(batch));
 }
 
@@ -213,7 +230,7 @@ void GameOfLifeKernel::zeros(int **X, const int rows, const int cols) {
 void GameOfLifeKernel::batch_ranges(int n_samples, int n_batches) {
     // Don't try to make more batches than the total number of samples.
     if (n_batches >= n_samples - 2) {
-        n_batches = n_samples - 2; 
+        n_batches = n_samples - 2;
     }
     int batch_size = n_samples / n_batches;
     for (int i = 0; i < n_batches; i++) {
