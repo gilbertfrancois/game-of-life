@@ -1,6 +1,6 @@
+#include <iostream>
 #include "main.h"
 #include "app.h"
-#include <iostream>
 
 int parse_arguments(std::vector<std::string> args, Config *config) {
     for (auto i = args.begin(); i != args.end(); ++i) {
@@ -59,7 +59,6 @@ int main(int argc, char *argv[]) {
     config.mode_fullscreen = false;
     config.zoom_factor = 1;
     config.n_steps = 1000;
-
     std::vector<std::string> args(argv + 1, argv + argc);
     parse_arguments(args, &config);
     App *app = new App(config);
