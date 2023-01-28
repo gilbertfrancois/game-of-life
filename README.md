@@ -200,3 +200,7 @@ The Game of Life simulation can be distributed in many different ways. Since it 
 - [x] Support Linux x86_64 and arm64.
 - [x] Support Windows x86_64.
 - [ ] Make binary release for (almost) all platforms.
+- [ ] Add option for circular boundary conditions.
+
+
+
