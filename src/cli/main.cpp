@@ -30,7 +30,7 @@ void get_terminal_size(Config *config) {
     GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
     term_cols = csbi.srWindow.Right - csbi.srWindow.Left + 1;
     term_rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
-#elif TIOCGSIZE
+#elifdef TIOCGSIZE
     struct ttysize ts;
     ioctl(STDIN_FILENO, TIOCGSIZE, &ts);
     term_cols = ts.ts_cols;
