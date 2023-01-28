@@ -66,7 +66,7 @@ make
 
 |                                                              |
 | ------------------------------------------------------------ |
-| ![](C:\Users\spami\source\repos\game-of-life\assets\images\vs2022_cmake_settings.png) |
+| ![Visual Studio settings](./assets/images/vs2022_cmake_settings.png) |
 | Projects -> CMake settings \| CMake variables and cache -> **SDL2_DIR <path>** |
 
 - Build the project
