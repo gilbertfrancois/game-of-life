@@ -85,10 +85,10 @@ void App::draw() {
 void App::draw_cells() {
     SDL_SetRenderTarget(renderer, texture);
     // Clear render target.
-    SDL_SetRenderDrawColor(renderer, 0, 0, 100, 255);
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderClear(renderer);
     // Draw pixels.
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     for (int row = 0; row < config.rows; row++) {
         for (int col = 0; col < config.cols; col++) {
             int value = kernel->get_xt_at(row, col);
