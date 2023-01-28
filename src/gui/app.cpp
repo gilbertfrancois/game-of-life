@@ -1,7 +1,6 @@
-#include "app.h"
-#include <SDL_pixels.h>
 #include <iostream>
 #include <ostream>
+#include "app.h"
 
 App::App(Config config_) : config(config_) {
 
