@@ -88,10 +88,22 @@ make
 
 ## Running the programs
 
-The CLI and GUI programs have different options:
+Open a terminal and type:
 
 ```sh
-game-of-life-gui
+./game-of-life-cli
+```
+
+for the text terminal version and
+
+```sh
+./game-of-life-gui --fullscreen
+```
+
+for the GUI version in full screen. The CLI and GUI programs have different options:
+
+```sh
+game-of-life-gui [options]
 
    --fullscreen          : display full screen.
    --zoom <number>       : zoom factor, default = 1.
@@ -102,7 +114,7 @@ game-of-life-gui
 ```
 
 ```sh
-game-of-life-cli
+game-of-life-cli [options]
 
    --width <number>      : width of the domain, default is current terminal width.
    --height <number>     : height of the domain, default is current terminal height.
@@ -201,17 +213,3 @@ void Foo::printOutputCppMemberFunctionSelf() {
 ## Domain slicing
 
 The Game of Life simulation can be distributed in many different ways. Since it is a cellular automata, every cell is updated from *t_0* -> *t_1* fully independently. It only needs the states from its direct neighbors. This code used the domain slicing approach, which can easily be applied to other tasks, like image processing. The domain is divided horizontally in row batches. Each slice is then sent to another thread where its new state is computed. After the computation, the threads are joined and the new state is set as the current state (swap buffers). To prevent excessive memory allocation and destruction for each time step, only the memory range of the slice is given to the threads. All threads share the same memory block. This is fine, since they read the current state from buffer 1 and update only their own part in buffer 2.
-
-
-
-## Todo
-
-- [x] Remove openFrameworks dependency and rewrite with SDL2.
-- [x] Support macOS x86_64 and arm64.
-- [x] Support Linux x86_64 and arm64.
-- [x] Support Windows x86_64.
-- [ ] Make binary release for (almost) all platforms.
-- [ ] Add option for circular boundary conditions.
-
-
-
