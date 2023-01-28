@@ -9,6 +9,13 @@ This program shows the well known Game of Life. I've chosen this simulation as a
 
 
 
+|                                            |                                                  |
+| ------------------------------------------ | ------------------------------------------------ |
+| ![CLI](./assets/images/screenshot_cli.png) | ![CLI](./assets/images/screenshot_gui_zoom8.png) |
+| Terminal version                           | GUI version (zoom = 8)                           |
+
+
+
 ## Building on macOS
 
 ```sh
@@ -25,6 +32,8 @@ make
 
 ```
 
+
+
 ## Building on Linux
 
 ```sh
@@ -39,6 +48,8 @@ cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 make
 ```
+
+
 
 ## Building on Windows with Visual Studio
 
@@ -82,11 +93,11 @@ The CLI and GUI programs have different options:
 ```sh
 game-of-life-gui
 
-   --steps <number>      : number of steps, default = 1000.
+   --fullscreen          : display full screen.
    --zoom <number>       : zoom factor, default = 1.
+   --steps <number>      : number of steps, default = 1000.
    --without-threads     : compute single threaded.
    --with-threads        : compute multi-threaded.
-   --fullscreen          : display full screen.
    -h, --help            : info and help message.
 ```
 
