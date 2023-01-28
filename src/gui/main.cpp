@@ -15,13 +15,7 @@ int parse_arguments(std::vector<std::string> args, Config *config) {
                 << "-----------------------------------------------------------"
                    "---------------------"
                 << std::endl;
-            std::cout << "game-of-life-cli" << std::endl;
-            std::cout << "   --width <number>      : width of the domain, "
-                         "default is current terminal width."
-                      << std::endl;
-            std::cout << "   --height <number>     : height of the domain, "
-                         "default is current terminal height."
-                      << std::endl;
+            std::cout << "game-of-life-gui" << std::endl;
             std::cout
                 << "   --steps <number>      : number of steps, default = 1000."
                 << std::endl;
@@ -41,10 +35,6 @@ int parse_arguments(std::vector<std::string> args, Config *config) {
                 << "   -h, --help            : info and help message."
                 << std::endl;
             exit(0);
-        } else if (*i == "--width") {
-            config->cols = stoi(*++i);
-        } else if (*i == "--height") {
-            config->rows = stoi(*++i);
         } else if (*i == "--steps") {
             config->n_steps = stoi(*++i);
         } else if (*i == "--zoom") {
