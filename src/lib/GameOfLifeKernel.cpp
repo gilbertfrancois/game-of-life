@@ -81,7 +81,7 @@ void GameOfLifeKernel::timestep() {
 }
 
 const int GameOfLifeKernel::get_xt_at(int row, int col) {
-    return row > 0 && row < rows && col > 0 && col < cols ? xt0[row][col] : -1;
+    return xt0[row][col];
 }
 
 int **GameOfLifeKernel::get_xt() const { return xt0; }
