@@ -1,10 +1,8 @@
-#include "app.h"
-#include <SDL_pixels.h>
 #include <iostream>
 #include <ostream>
+#include "app.h"
 
 App::App(Config config_) : config(config_) {
-
     steps_per_sec = 10;
     timer_fps = 0;
     time = 0;
@@ -26,14 +24,12 @@ App::~App() {
 
 void App::init_video() {
     auto status = SDL_Init(SDL_INIT_VIDEO);
-
     SDL_DisplayMode mode;
     SDL_GetCurrentDisplayMode(0, &mode);
     std::cout << "Current display mode: "
               << SDL_GetPixelFormatName(mode.format) << std::endl;
     std::cout << "Current display res: " << mode.w << ", " << mode.h
               << std::endl;
-
     if (config.mode_fullscreen) {
         config.display_w = mode.w;
         config.display_h = mode.h;
@@ -43,7 +39,6 @@ void App::init_video() {
     }
     config.rows = (int)(config.display_h / config.zoom_factor);
     config.cols = (int)(config.display_w / config.zoom_factor);
-
     window = SDL_CreateWindow("Game of Life", 0, 0, config.display_w, config.display_h, 0);
     SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
@@ -135,13 +130,10 @@ void App::run() {
     for (int step = 0; step < config.n_steps; step++) {
         if (!running)
             break;
-
         tick_one_sec();
-
         progress = (float)step / config.n_steps;
         update();
         draw();
-
         limit_fps();
     }
 }

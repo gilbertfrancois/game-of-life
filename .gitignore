@@ -1,5 +1,8 @@
 .DS_Store
-.cache
-build
-xcuserdata
-.vs
+/.cache
+/build
+/xcuserdata
+/.vs
+/3rdparty/sdl2
+/CMakeSettings.json
+/out

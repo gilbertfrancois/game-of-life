@@ -1,7 +1,11 @@
 #ifndef GUI_H_FILE
 #define GUI_H_FILE
 
+#ifdef _WIN32
+#include <SDL.h>
+#else
 #include <SDL2/SDL.h>
+#endif
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>

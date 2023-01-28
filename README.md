@@ -3,22 +3,115 @@ _Gilbert Francois Duivesteijn_
 
 This program shows the well known Game of Life. I've chosen this simulation as an exercise to explore:
 
-* Member function pointers as argument
-* Problem domain slicing
-* concurrency, using all available cpu cores, without creating and destroying thread objects after each iteration.
+* Member function pointers as function arguments,
+* Concurrency, domain slicing and treating boundary conditions,
+* Development of a multi platform, multi architecture console and graphical application.
 
 
 
-## (Member) function pointers as argument
-If you want to use function pointers as argument, where the function is a member function of a class, you also have to parse a pointer of the instance of the object. On the bottom of the page, there is a small code example showing the different cases for C style and C++ style function pointers.
+## Building on macOS
+
+```sh
+# Install SDL2
+brew install sdl2
+
+# Clone and build the project
+git clone ...
+cd game-of-life
+mkdir build
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make
+
+```
+
+## Building on Linux
+
+```sh
+# Install SDL2 (Ubuntu / Debian)
+apt install libsdl2
+
+# Clone and build the project
+git clone ...
+cd game-of-life
+mkdir build
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make
+```
+
+## Building on Windows with Visual Studio
+
+- Clone the project from https://github.com/gilbertfrancois/game-of-life.git
+- Download `SDL2-devel-2.xx-VC.zip` from [https://github.com/libsdl-org/SDL/releases](https://github.com/libsdl-org/SDL/releases), where 2.xx is the latest version that is available.  Unzip and copy the files e.g. in: `game-of-life/3rdparty/sdl2` so that the project folder structure looks like:
+
+	```sh
+	C:...path to...\game-of-life>
+	├───3rdparty
+	│   └───sdl2
+	│       ├───cmake
+	│       ├───docs
+	│       ├───include
+	│       └───lib
+	│           ├───x64
+	│           └───x86
+	├───cmake
+	└───src
+    ├───cli
+    ├───gui
+    └───lib
+	```
+
+- In Visual Studio, go to Project -> CMake settings and add the variable SDL2_DIR:
+
+|                                                              |
+| ------------------------------------------------------------ |
+| ![Visual Studio settings](./assets/images/vs2022_cmake_settings.png) |
+| Projects -> CMake settings \| CMake variables and cache -> **SDL2_DIR <path>** |
+
+- Build the project
+
+- Copy `3rdparty/sdl2/lib/SDL2.dll` to the build folder, where game-of-life-gui.exe is located.
+
+
+
+## Running the programs
+
+The CLI and GUI programs have different options:
+
+```sh
+game-of-life-gui
+
+   --steps <number>      : number of steps, default = 1000.
+   --zoom <number>       : zoom factor, default = 1.
+   --without-threads     : compute single threaded.
+   --with-threads        : compute multi-threaded.
+   --fullscreen          : display full screen.
+   -h, --help            : info and help message.
+```
+
+```sh
+game-of-life-cli
+
+   --width <number>      : width of the domain, default is current terminal width.
+   --height <number>     : height of the domain, default is current terminal height.
+   --steps <number>      : number of steps, default = 1000.
+   --without-threads     : compute single threaded.
+   --with-threads        : compute multi-threaded.
+   -h, --help            : info and help message.
+```
+
+The GUI can be terminated with `[q]` or `[esc]`.
+
+
+
+## (Member) function pointers as function arguments
+
+If you want to use function pointers as argument, where the function is a member function of a class, you also have to parse a pointer of the instance of the object. At the end of this paragraph, there is a small code example showing the different cases for C style and C++ style function pointers.
 
 The Game of Life simulation uses one function method for domain slicing and distributing the work load over the available CPU cores by starting an equal amount of threads. It takes a function pointer as an argument, to enable me to send the function for initial conditions and the function for time stepping to this method.
 
-## Domain slicing
-The Game of Life simulation can be distributed in many different ways. Since it is a cellular automata, every cell is updated from t_0 -> t_1 fully independently. It only needs the states from its direct neighbours. This code used the domain slicing approach, which can easily be applied to other tasks, like image processing. The domain is divided horizontally in row batches. Each slice is then sent to another thread where its new state is computed. After the computation, the threads are joined and the new state is set as the current state (swap buffers). To prevent excessive memory allocation and destruction for each time step, only the memory range of the slice is given to the threads. All threads share the same memory block. This is fine, since they read the current state from buffer 1 and update only their own part in buffer 2.
 
-# Compile
-I used Xcode 7 on Mac OS and it needs the OpenFrameworks library, used for the graphical output. To compile the source code yourself, you have to adapt the file `Project.xcconfig` and change the environment variables `OF_PATH` and `#include` to the location of OpenFrameworks on your machine.
 
 **main.cpp**
 
@@ -92,6 +185,22 @@ void Foo::printOutputCppMemberFunctionSelf() {
 }
 ```
 
+
+
+## Domain slicing
+
+The Game of Life simulation can be distributed in many different ways. Since it is a cellular automata, every cell is updated from *t_0* -> *t_1* fully independently. It only needs the states from its direct neighbors. This code used the domain slicing approach, which can easily be applied to other tasks, like image processing. The domain is divided horizontally in row batches. Each slice is then sent to another thread where its new state is computed. After the computation, the threads are joined and the new state is set as the current state (swap buffers). To prevent excessive memory allocation and destruction for each time step, only the memory range of the slice is given to the threads. All threads share the same memory block. This is fine, since they read the current state from buffer 1 and update only their own part in buffer 2.
+
+
+
 ## Todo
-- [ ] Remove openFrameworks dependency and rewrite with SDL2.
-- [ ] Support macOS, Linux (and maybe Windows).
+
+- [x] Remove openFrameworks dependency and rewrite with SDL2.
+- [x] Support macOS x86_64 and arm64.
+- [x] Support Linux x86_64 and arm64.
+- [x] Support Windows x86_64.
+- [ ] Make binary release for (almost) all platforms.
+- [ ] Add option for circular boundary conditions.
+
+
+
