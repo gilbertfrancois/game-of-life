@@ -43,7 +43,17 @@ make
 
 ## Building on Windows with Visual Studio 2022
 
-To do...
+- Open a new project and clone from https://github.com/gilbertfrancois/game-of-life.git
+
+- Open ` Tools -> Command Line -> Developer Command Prompt` at solution level and run this command: 
+
+  ```sh
+  git submodule update
+  cd 3rdparty\vcpkg
+  git pull origin master
+  ```
+
+  
 
 
 
