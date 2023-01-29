@@ -78,7 +78,7 @@ int parse_arguments(std::vector<std::string> args, Config *config) {
                    "---------------------"
                 << std::endl;
             std::cout << "Game of Life" << std::endl;
-            std::cout << "(C) 2022, Gilbert Francois Duivesteijn" << std::endl;
+            std::cout << "(C) 2023, Gilbert Francois Duivesteijn" << std::endl;
             std::cout
                 << "-----------------------------------------------------------"
                    "---------------------"
