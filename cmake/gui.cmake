@@ -1,7 +1,7 @@
-find_package(SDL2 REQUIRED)
-include_directories(${SDL2_INCLUDE_DIRS})
-message(STATUS ${SDL2_INCLUDE_DIRS})
-message(STATUS ${SDL2_LIBRARIES})
+find_package(SDL2 CONFIG REQUIRED)
+
+# Use this with older cmake versions
+# include_directories(${SDL2_INCLUDE_DIRS})
 
 add_executable(game-of-life-gui
     src/gui/main.cpp
@@ -9,5 +9,11 @@ add_executable(game-of-life-gui
     src/lib/GameOfLifeKernel.cpp
     )
 
-# Link SDL2::Main, SDL2::Image and SDL2::GFX to our project
-target_link_libraries(game-of-life-gui ${SDL2_LIBRARIES})
+target_link_libraries(game-of-life-gui
+    PRIVATE
+    $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
+    $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
+)
+
+# Use this with older cmake versions
+# target_link_libraries(game-of-life-gui ${SDL2_LIBRARIES})
