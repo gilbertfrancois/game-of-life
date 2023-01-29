@@ -11,8 +11,7 @@ App::App(Config config_) : config(config_) {
     frame_count = 0;
     running = false;
     init_video();
-    kernel =
-        new GameOfLifeKernel(config.rows, config.cols, config.boundary_type, config.with_threads);
+    kernel = new GameOfLifeKernel(config);
 }
 
 App::~App() {

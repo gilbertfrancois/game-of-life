@@ -12,22 +12,19 @@
 #include <sstream>
 /* #include <cstdlib> */
 
-GameOfLifeKernel::GameOfLifeKernel(int rows, int cols, int boundary_type,
-                                   bool with_threads)
-    : rows(rows), cols(cols), boundary_type(boundary_type),
-      with_threads(with_threads) {
+GameOfLifeKernel::GameOfLifeKernel(Config config_) : config(config_) {
     // Setup concurrency
     n_cpus = std::thread::hardware_concurrency();
-    if (with_threads) {
-        batch_ranges(rows, n_cpus);
+    if (config.with_threads) {
+        batch_ranges(config.rows, n_cpus);
     } else {
-        batch_ranges(rows, 1);
+        batch_ranges(config.rows, 1);
     }
     threads = new std::thread[batches.size()];
     // Print info on the console.
     std::cout << "--- Availabe CPU cores: " << n_cpus << ", using "
               << batches.size() << " threads." << std::endl;
-    std::cout << "--- Boundary type: " << boundary_type << std::endl;
+    std::cout << "--- Boundary type: " << config.boundary_type << std::endl;
     for (int t = 0; t < batches.size(); t++) {
         auto batch = batches.at(t);
         std::cout << "batch " << std::setw(2) << t << ":    " << std::setw(4)
@@ -35,18 +32,18 @@ GameOfLifeKernel::GameOfLifeKernel(int rows, int cols, int boundary_type,
                   << std::get<1>(batch) << std::endl;
     }
     // Alloc - init domain
-    xt0 = new int *[rows];
-    xt1 = new int *[rows];
-    for (int i = 0; i < rows; i++) {
-        xt0[i] = new int[cols];
-        xt1[i] = new int[cols];
+    xt0 = new int *[config.rows];
+    xt1 = new int *[config.rows];
+    for (int i = 0; i < config.rows; i++) {
+        xt0[i] = new int[config.cols];
+        xt1[i] = new int[config.cols];
     }
-    zeros(xt0, rows, cols);
-    zeros(xt1, rows, cols);
+    zeros(xt0);
+    zeros(xt1);
     set_initial_conditions();
 
     // Set boundary condition function
-    switch (boundary_type) {
+    switch (config.boundary_type) {
     case BOUNDARY_CONSTANT:
         fpr_apply_boundary_conditions =
             &GameOfLifeKernel::apply_constant_boundary_conditions;
@@ -66,7 +63,7 @@ GameOfLifeKernel::GameOfLifeKernel(int rows, int cols, int boundary_type,
 }
 
 GameOfLifeKernel::~GameOfLifeKernel() {
-    for (int i = 0; i < rows; i++) {
+    for (int i = 0; i < config.rows; i++) {
         delete[] xt0[i];
         delete[] xt1[i];
     }
@@ -77,7 +74,7 @@ GameOfLifeKernel::~GameOfLifeKernel() {
 
 void GameOfLifeKernel::timestep() {
     // compute inner domain
-    if (with_threads) {
+    if (config.with_threads) {
         start_threads(&GameOfLifeKernel::timestep_subdomain, this);
     } else {
         start_no_threads(&GameOfLifeKernel::timestep_subdomain, this);
@@ -88,7 +85,7 @@ void GameOfLifeKernel::timestep() {
     int **tmp = xt0;
     xt0 = xt1;
     xt1 = tmp;
-    zeros(xt1, rows, cols);
+    zeros(xt1);
 }
 
 int GameOfLifeKernel::get_n_threads() { return batches.size(); }
@@ -103,8 +100,8 @@ const int GameOfLifeKernel::get_xt_at(int row, int col) {
 
 std::string GameOfLifeKernel::to_string() {
     std::stringstream ss;
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
+    for (int i = 0; i < config.rows; i++) {
+        for (int j = 0; j < config.cols; j++) {
             ss << ((xt0[i][j] == 1) ? CELL_ALIVE : CELL_DEAD);
         }
         ss << std::endl;
@@ -113,7 +110,7 @@ std::string GameOfLifeKernel::to_string() {
 }
 
 void GameOfLifeKernel::set_initial_conditions() {
-    set_initial_conditions_in_subdomain(0, rows);
+    set_initial_conditions_in_subdomain(0, config.rows);
 }
 
 void GameOfLifeKernel::set_initial_conditions_in_subdomain(const int min_row,
@@ -125,12 +122,12 @@ void GameOfLifeKernel::set_initial_conditions_in_subdomain(const int min_row,
     std::mt19937 gen(rd());
     std::uniform_int_distribution<int> distribution(0, 1);
     for (int i = min_row; i < max_row; i++) {
-        for (int j = 0; j < cols; j++) {
+        for (int j = 0; j < config.cols; j++) {
             xt0[i][j] = distribution(gen);
             sum += xt0[i][j];
         }
     }
-    float fraction = (float)sum / (rows * cols);
+    float fraction = (float)sum / (config.rows * config.cols);
     std::cout << "Initial distribution: " << fraction << std::endl;
 }
 
@@ -138,12 +135,12 @@ void GameOfLifeKernel::timestep_subdomain(const int min_row,
                                           const int max_row) {
     // Loop over inner domain
     int min_col = 0;
-    int max_col = cols - 1;
+    int max_col = config.cols - 1;
     for (int i = min_row; i < max_row; i++) {
-        if (i == 0 || i >= rows - 1)
+        if (i == 0 || i >= config.rows - 1)
             continue;
         for (int j = min_col; j < max_col; j++) {
-            if (j == 0 || j >= cols - 1)
+            if (j == 0 || j >= config.cols - 1)
                 continue;
             int sum = xt0[i - 1][j - 1] + xt0[i - 1][j] + xt0[i - 1][j + 1] +
                       xt0[i][j - 1] + xt0[i][j + 1] + xt0[i + 1][j - 1] +
@@ -156,22 +153,22 @@ void GameOfLifeKernel::timestep_subdomain(const int min_row,
 void GameOfLifeKernel::apply_constant_boundary_conditions() {
     int i, j, sum = 0;
     // compute edges
-    for (i = 1; i < rows - 1; i++) {
+    for (i = 1; i < config.rows - 1; i++) {
         j = 0;
         sum = xt0[i - 1][j] + xt0[i - 1][j + 1] + xt0[i][j + 1] +
               xt0[i + 1][j] + xt0[i + 1][j + 1];
         fx(i, j, sum);
-        j = cols - 1;
+        j = config.cols - 1;
         sum = xt0[i - 1][j - 1] + xt0[i - 1][j] + xt0[i][j - 1] +
               xt0[i + 1][j - 1] + xt0[i + 1][j];
         fx(i, j, sum);
     }
-    for (j = 1; j < cols - 1; j++) {
+    for (j = 1; j < config.cols - 1; j++) {
         i = 0;
         sum = xt0[i][j - 1] + xt0[i][j + 1] + xt0[i + 1][j - 1] +
               xt0[i + 1][j] + xt0[i + 1][j + 1];
         fx(i, j, sum);
-        i = rows - 1;
+        i = config.rows - 1;
         sum = xt0[i - 1][j - 1] + xt0[i - 1][j] + xt0[i - 1][j + 1] +
               xt0[i][j - 1] + xt0[i][j + 1];
 
@@ -183,15 +180,15 @@ void GameOfLifeKernel::apply_constant_boundary_conditions() {
     sum = xt0[i][j + 1] + xt0[i + 1][j] + xt0[i + 1][j + 1];
     fx(i, j, sum);
     i = 0;
-    j = cols - 1;
+    j = config.cols - 1;
     sum = xt0[i][j - 1] + xt0[i + 1][j - 1] + xt0[i + 1][j];
     fx(i, j, sum);
-    i = rows - 1;
+    i = config.rows - 1;
     j = 0;
     sum = xt0[i - 1][j] + xt0[i - 1][j + 1] + xt0[i][j + 1];
     fx(i, j, sum);
-    i = rows - 1;
-    j = cols - 1;
+    i = config.rows - 1;
+    j = config.cols - 1;
     sum = xt0[i - 1][j - 1] + xt0[i - 1][j] + xt0[i][j - 1];
     fx(i, j, sum);
 }
@@ -199,25 +196,25 @@ void GameOfLifeKernel::apply_constant_boundary_conditions() {
 void GameOfLifeKernel::apply_periodic_boundary_conditions() {
     int i, j, sum = 0;
     // compute edges
-    for (i = 1; i < rows - 1; i++) {
+    for (i = 1; i < config.rows - 1; i++) {
         j = 0;
-        sum = xt0[i - 1][cols - 1] + xt0[i - 1][j] + xt0[i - 1][j + 1] +
-              xt0[i][cols - 1] + xt0[i][j + 1] + xt0[i + 1][cols - 1] +
-              xt0[i + 1][j] + xt0[i + 1][j + 1];
+        sum = xt0[i - 1][config.cols - 1] + xt0[i - 1][j] + xt0[i - 1][j + 1] +
+              xt0[i][config.cols - 1] + xt0[i][j + 1] +
+              xt0[i + 1][config.cols - 1] + xt0[i + 1][j] + xt0[i + 1][j + 1];
         fx(i, j, sum);
-        j = cols - 1;
+        j = config.cols - 1;
         sum = xt0[i - 1][j - 1] + xt0[i - 1][j] + xt0[i - 1][0] +
               xt0[i][j - 1] + xt0[i][0] + xt0[i + 1][j - 1] + xt0[i + 1][j] +
               xt0[i + 1][0];
         fx(i, j, sum);
     }
-    for (j = 1; j < cols - 1; j++) {
+    for (j = 1; j < config.cols - 1; j++) {
         i = 0;
-        sum = xt0[rows - 1][j - 1] + xt0[rows - 1][j] + xt0[rows - 1][j + 1] +
-              xt0[i][j - 1] + xt0[i][j + 1] + xt0[i + 1][j - 1] +
-              xt0[i + 1][j] + xt0[i + 1][j + 1];
+        sum = xt0[config.rows - 1][j - 1] + xt0[config.rows - 1][j] +
+              xt0[config.rows - 1][j + 1] + xt0[i][j - 1] + xt0[i][j + 1] +
+              xt0[i + 1][j - 1] + xt0[i + 1][j] + xt0[i + 1][j + 1];
         fx(i, j, sum);
-        i = rows - 1;
+        i = config.rows - 1;
         sum = xt0[i - 1][j - 1] + xt0[i - 1][j] + xt0[i - 1][j + 1] +
               xt0[i][j - 1] + xt0[i][j + 1] + xt0[0][j - 1] + xt0[0][j] +
               xt0[0][j + 1];
@@ -226,24 +223,25 @@ void GameOfLifeKernel::apply_periodic_boundary_conditions() {
     // compute corners
     i = 0;
     j = 0;
-    sum = xt0[rows - 1][cols - 1] + xt0[rows - 1][j] + xt0[rows - 1][j + 1] +
-          xt0[i][cols - 1] + xt0[i][j + 1] + xt0[i + 1][cols - 1] +
-          xt0[i + 1][j] + xt0[i + 1][j + 1];
+    sum = xt0[config.rows - 1][config.cols - 1] + xt0[config.rows - 1][j] +
+          xt0[config.rows - 1][j + 1] + xt0[i][config.cols - 1] +
+          xt0[i][j + 1] + xt0[i + 1][config.cols - 1] + xt0[i + 1][j] +
+          xt0[i + 1][j + 1];
     fx(i, j, sum);
     i = 0;
-    j = cols - 1;
-    sum = xt0[rows - 1][j - 1] + xt0[rows - 1][j] + xt0[rows - 1][0] +
-          xt0[i][j - 1] + xt0[i][0] + xt0[i + 1][j - 1] + xt0[i + 1][j] +
-          xt0[i + 1][0];
+    j = config.cols - 1;
+    sum = xt0[config.rows - 1][j - 1] + xt0[config.rows - 1][j] +
+          xt0[config.rows - 1][0] + xt0[i][j - 1] + xt0[i][0] +
+          xt0[i + 1][j - 1] + xt0[i + 1][j] + xt0[i + 1][0];
     fx(i, j, sum);
-    i = rows - 1;
+    i = config.rows - 1;
     j = 0;
-    sum = xt0[i - 1][cols - 1] + xt0[i - 1][j] + xt0[i - 1][j + 1] +
-          xt0[i][cols - 1] + xt0[i][j + 1] + xt0[0][cols - 1] + xt0[0][j] +
-          xt0[0][j + 1];
+    sum = xt0[i - 1][config.cols - 1] + xt0[i - 1][j] + xt0[i - 1][j + 1] +
+          xt0[i][config.cols - 1] + xt0[i][j + 1] + xt0[0][config.cols - 1] +
+          xt0[0][j] + xt0[0][j + 1];
     fx(i, j, sum);
-    i = rows - 1;
-    j = cols - 1;
+    i = config.rows - 1;
+    j = config.cols - 1;
     sum = xt0[i - 1][j - 1] + xt0[i - 1][j] + xt0[i - 1][0] + xt0[i][j - 1] +
           xt0[i][0] + xt0[0][j - 1] + xt0[0][j] + xt0[0][0];
     fx(i, j, sum);
@@ -252,25 +250,25 @@ void GameOfLifeKernel::apply_periodic_boundary_conditions() {
 void GameOfLifeKernel::apply_mirror_boundary_conditions() {
     int i, j, sum = 0;
     // compute edges
-    for (i = 1; i < rows - 1; i++) {
+    for (i = 1; i < config.rows - 1; i++) {
         j = 0;
         sum = xt0[i - 1][j + 1] + xt0[i - 1][j] + xt0[i - 1][j + 1] +
               xt0[i][j + 1] + xt0[i][j + 1] + xt0[i + 1][j + 1] +
               xt0[i + 1][j] + xt0[i + 1][j + 1];
         fx(i, j, sum);
-        j = cols - 1;
+        j = config.cols - 1;
         sum = xt0[i - 1][j - 1] + xt0[i - 1][j] + xt0[i - 1][j - 1] +
               xt0[i][j - 1] + xt0[i][j - 1] + xt0[i + 1][j - 1] +
               xt0[i + 1][j] + xt0[i + 1][j - 1];
         fx(i, j, sum);
     }
-    for (j = 1; j < cols - 1; j++) {
+    for (j = 1; j < config.cols - 1; j++) {
         i = 0;
         sum = xt0[i + 1][j - 1] + xt0[i + 1][j] + xt0[i + 1][j + 1] +
               xt0[i][j - 1] + xt0[i][j + 1] + xt0[i + 1][j - 1] +
               xt0[i + 1][j] + xt0[i + 1][j + 1];
         fx(i, j, sum);
-        i = rows - 1;
+        i = config.rows - 1;
         sum = xt0[i - 1][j - 1] + xt0[i - 1][j] + xt0[i - 1][j + 1] +
               xt0[i][j - 1] + xt0[i][j + 1] + xt0[i - 1][j - 1] +
               xt0[i - 1][j] + xt0[i - 1][j + 1];
@@ -283,17 +281,17 @@ void GameOfLifeKernel::apply_mirror_boundary_conditions() {
           xt0[i + 1][j + 1] + xt0[i + 1][j] + xt0[i + 1][j + 1];
     fx(i, j, sum);
     i = 0;
-    j = cols - 1;
+    j = config.cols - 1;
     sum = xt0[i + 1][j - 1] + xt0[i + 1][j] + xt0[i][j - 1] + xt0[i][j - 1] +
           xt0[i + 1][j - 1] + xt0[i + 1][j] + xt0[i + 1][j - 1];
     fx(i, j, sum);
-    i = rows - 1;
+    i = config.rows - 1;
     j = 0;
     sum = xt0[i - 1][j + 1] + xt0[i - 1][j] + xt0[i - 1][j + 1] +
           xt0[i][j + 1] + xt0[i][j + 1] + +xt0[i - 1][j] + xt0[i - 1][j + 1];
     fx(i, j, sum);
-    i = rows - 1;
-    j = cols - 1;
+    i = config.rows - 1;
+    j = config.cols - 1;
     sum = xt0[i - 1][j - 1] + xt0[i - 1][j] + xt0[i - 1][j - 1] +
           xt0[i][j - 1] + xt0[i][j - 1] + xt0[i - 1][j - 1] + xt0[i - 1][j];
     fx(i, j, sum);
@@ -340,9 +338,9 @@ void GameOfLifeKernel::start_threads(void (GameOfLifeKernel::*fn)(int, int),
     }
 }
 
-void GameOfLifeKernel::zeros(int **X, const int rows, const int cols) {
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
+void GameOfLifeKernel::zeros(int **X) {
+    for (int i = 0; i < config.rows; i++) {
+        for (int j = 0; j < config.cols; j++) {
             X[i][j] = 0;
         }
     }

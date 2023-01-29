@@ -5,6 +5,7 @@
 #ifndef GAMEOFLIFE_GAMEOFLIFEKERNEL_H
 #define GAMEOFLIFE_GAMEOFLIFEKERNEL_H
 
+#include "config.h"
 #include <string>
 #include <thread>
 #include <tuple>
@@ -21,7 +22,7 @@ enum BOUNDARY_TYPES {
 
 class GameOfLifeKernel {
   public:
-    GameOfLifeKernel(int rows, int cols, int boundary_type, bool with_threads);
+    GameOfLifeKernel(Config config);
 
     virtual ~GameOfLifeKernel();
 
@@ -38,10 +39,9 @@ class GameOfLifeKernel {
     std::string to_string();
 
   private:
-    const int rows;
-    const int cols;
-    const bool with_threads;
-    const bool boundary_type;
+    Config config;
+    /* int rows; */
+    /* int cols; */
     std::thread *threads;
     int **xt0;
     int **xt1;
@@ -71,7 +71,7 @@ class GameOfLifeKernel {
     void start_threads(void (GameOfLifeKernel::*fn)(int, int),
                        GameOfLifeKernel *kernel);
 
-    void zeros(int **X, const int rows, const int cols);
+    void zeros(int **X);
 
     void batch_ranges(int n_samples, int n_batches);
 };

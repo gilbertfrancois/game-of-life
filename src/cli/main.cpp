@@ -19,7 +19,6 @@
 //
 using namespace std::chrono_literals;
 
-
 void get_terminal_size(Config *config) {
     int arg_rows = config->rows;
     int arg_cols = config->cols;
@@ -82,15 +81,13 @@ int parse_arguments(std::vector<std::string> args, Config *config) {
             std::cout
                 << "   --steps <number>      : number of steps, default = 1000."
                 << std::endl;
-            std::cout
-                << "   --bt <number>         : boundary type: 0=const, 1=periodic, 2=mirror, default=1."
-                << std::endl;
-            std::cout
-                << "   --without-threads     : compute single threaded."
-                << std::endl;
-            std::cout
-                << "   --with-threads        : compute multi-threaded."
-                << std::endl;
+            std::cout << "   --bt <number>         : boundary type: 0=const, "
+                         "1=periodic, 2=mirror, default=1."
+                      << std::endl;
+            std::cout << "   --without-threads     : compute single threaded."
+                      << std::endl;
+            std::cout << "   --with-threads        : compute multi-threaded."
+                      << std::endl;
             std::cout << "   -h, --help            : info and help message."
                       << std::endl;
             exit(0);
@@ -127,8 +124,7 @@ int main(int argc, char **argv) {
     get_terminal_size(&config);
     std::cout << config.cols << std::endl;
     // Init the kernel.
-    GameOfLifeKernel *kernel =
-        new GameOfLifeKernel(config.rows, config.cols, config.boundary_type, config.with_threads);
+    GameOfLifeKernel *kernel = new GameOfLifeKernel(config);
     int n_threads = kernel->get_n_threads();
     int n_cpus = kernel->get_n_cpus();
     // Allow the user to read the domain slicing in the terminal window.
@@ -139,7 +135,7 @@ int main(int argc, char **argv) {
         std::cout << "\033[H\033[J";
         // Print the current state of the domain.
         /* kernel->printDomain(); */
-        std::cout << kernel->to_string(); 
+        std::cout << kernel->to_string();
         // Print a status line.
         std::cout << "[ cpus: " << n_cpus << " ]-";
         std::cout << "[ threads: " << n_threads << " ]-";
@@ -153,6 +149,5 @@ int main(int argc, char **argv) {
     }
     // Cleanup
     delete kernel;
-
     exit(0);
 }
