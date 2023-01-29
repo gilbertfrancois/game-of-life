@@ -1,0 +1,9 @@
+{
+    "name": "game-of-life",
+    "version": "0.9.0",
+    "description": "Multi-threaded version of Game of Life, written in C++."
+
+    "dependencies": [
+        "sdl2"
+    ]
+}
