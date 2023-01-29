@@ -6,3 +6,4 @@
 /3rdparty/sdl2
 /CMakeSettings.json
 /out
+compile_commands.json
