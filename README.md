@@ -6,7 +6,7 @@ This program shows the well known Game of Life. I've chosen this simulation as a
 * Member function pointers as function arguments,
 * Concurrency, domain slicing and treating boundary conditions,
 * Development of a multi platform, multi architecture console and graphical application.
-* Using [vcpkg](https://vcpkg.io) C/C++ cross platform dependency package manager, working with [CMake](https://cmake.org).
+* Using [vcpkg](https://vcpkg.io) C/C++ cross platform dependency package manager as a [CMake](https://cmake.org) extension.
 
 
 
