@@ -29,8 +29,6 @@
 
 #include "main.h"
 
-using namespace std::chrono_literals;
-
 void get_terminal_size(Config *config) {
     int arg_rows = config->rows;
     int arg_cols = config->cols;
@@ -144,7 +142,7 @@ int main(int argc, char **argv) {
     int n_threads = kernel->get_n_threads();
     int n_cpus = kernel->get_n_cpus();
     // Allow the user to read the domain slicing in the terminal window.
-    std::this_thread::sleep_for(1s);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     // Game loop.
     for (auto i = 0; i < config.n_steps; i++) {
         // VT100 compatible escape codes to clear the screen.
