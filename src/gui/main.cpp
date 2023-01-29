@@ -71,16 +71,21 @@ int parse_arguments(std::vector<std::string> args, Config *config) {
 
 
 int main(int argc, char *argv[]) {
-    Config config;
-    config.cols = 320;
+    // Initialize default values
+    Config config{};
     config.rows = 240;
-    config.with_threads = true;
-    config.mode_fullscreen = false;
-    config.zoom_factor = 1;
+    config.cols = 320;
     config.n_steps = 1000;
     config.boundary_type = BOUNDARY_PERIODIC;
+    config.display_w = 320;
+    config.display_h = 240;
+    config.zoom_factor = 1;
+    config.with_threads = true;
+    config.mode_fullscreen = false;
+    // Parse arguments
     std::vector<std::string> args(argv + 1, argv + argc);
     parse_arguments(args, &config);
+    // Run app
     App *app = new App(config);
     app->run();
     delete app;

@@ -122,12 +122,16 @@ int parse_arguments(std::vector<std::string> args, Config *config) {
 
 int main(int argc, char **argv) {
     // Initialize default values
-    Config config;
-    config.cols = 1;
+    Config config{};
     config.rows = 1;
+    config.cols = 1;
     config.n_steps = 1000;
-    config.with_threads = true;
     config.boundary_type = BOUNDARY_PERIODIC;
+    config.display_w = 0;
+    config.display_h = 0;
+    config.zoom_factor = 1;
+    config.with_threads = true;
+    config.mode_fullscreen = false;
     // Parse arguments
     std::vector<std::string> args(argv + 1, argv + argc);
     parse_arguments(args, &config);
