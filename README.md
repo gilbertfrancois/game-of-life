@@ -23,8 +23,9 @@ This program shows the well known Game of Life. I've chosen this simulation as a
 brew install sdl2
 
 # Clone and build the project
-git clone ...
+git clone --recurse-submodules https://github.com/gilbertfrancois/game-of-life.git
 cd game-of-life
+./3rdparty/vcpkg/bootstrap-vcpkg.sh
 mkdir build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
@@ -41,8 +42,9 @@ make
 apt install libsdl2
 
 # Clone and build the project
-git clone ...
+git clone --recurse-submodules https://github.com/gilbertfrancois/game-of-life.git
 cd game-of-life
+./3rdparty/vcpkg/bootstrap-vcpkg.sh
 mkdir build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
