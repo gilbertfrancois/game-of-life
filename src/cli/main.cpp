@@ -83,6 +83,9 @@ int parse_arguments(std::vector<std::string> args, Config *config) {
                 << "   --steps <number>      : number of steps, default = 1000."
                 << std::endl;
             std::cout
+                << "   --bt <number>         : boundary type: 0=const, 1=periodic, 2=mirror, default=1."
+                << std::endl;
+            std::cout
                 << "   --without-threads     : compute single threaded."
                 << std::endl;
             std::cout
@@ -97,6 +100,8 @@ int parse_arguments(std::vector<std::string> args, Config *config) {
             config->rows = stoi(*++i);
         } else if (*i == "--steps") {
             config->n_steps = stoi(*++i);
+        } else if (*i == "--bt") {
+            config->boundary_type = stoi(*++i);
         } else if (*i == "--without-threads") {
             config->with_threads = false;
         } else if (*i == "--with-threads") {
@@ -113,6 +118,7 @@ int main(int argc, char **argv) {
     config.rows = 1;
     config.n_steps = 1000;
     config.with_threads = true;
+    config.boundary_type = BOUNDARY_PERIODIC;
     // Parse arguments
     std::vector<std::string> args(argv + 1, argv + argc);
     parse_arguments(args, &config);
@@ -122,7 +128,7 @@ int main(int argc, char **argv) {
     std::cout << config.cols << std::endl;
     // Init the kernel.
     GameOfLifeKernel *kernel =
-        new GameOfLifeKernel(config.rows, config.cols, config.with_threads);
+        new GameOfLifeKernel(config.rows, config.cols, config.boundary_type, config.with_threads);
     int n_threads = kernel->get_n_threads();
     int n_cpus = kernel->get_n_cpus();
     // Allow the user to read the domain slicing in the terminal window.

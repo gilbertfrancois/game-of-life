@@ -2,13 +2,7 @@
 #define GAMEOFLIFE_GAMEOFLIFECLI_H
 
 #include "../lib/GameOfLifeKernel.h"
-
-typedef struct {
-    int rows;
-    int cols;
-    int n_steps;
-    bool with_threads;
-} Config;
+#include "../lib/config.h"
 
 void get_terminal_size(int *rows, int *cols);
 

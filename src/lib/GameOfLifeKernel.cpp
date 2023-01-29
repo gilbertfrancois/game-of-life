@@ -9,9 +9,11 @@
 #include <iostream>
 #include <random>
 #include <sstream>
+#include <ctime>
+/* #include <cstdlib> */
 
-GameOfLifeKernel::GameOfLifeKernel(int rows, int cols, bool with_threads)
-    : rows(rows), cols(cols), with_threads(with_threads) {
+GameOfLifeKernel::GameOfLifeKernel(int rows, int cols, int boundary_type, bool with_threads)
+    : rows(rows), cols(cols), boundary_type(boundary_type), with_threads(with_threads) {
     // Setup concurrency
     n_cpus = std::thread::hardware_concurrency();
     if (with_threads) {
@@ -20,8 +22,10 @@ GameOfLifeKernel::GameOfLifeKernel(int rows, int cols, bool with_threads)
         batch_ranges(rows, 1);
     }
     threads = new std::thread[batches.size()];
+    // Print info on the console.
     std::cout << "--- Availabe CPU cores: " << n_cpus << ", using "
               << batches.size() << " threads." << std::endl;
+    std::cout << "--- Boundary type: " << boundary_type << std::endl;
     for (int t = 0; t < batches.size(); t++) {
         auto batch = batches.at(t);
         std::cout << "batch " << std::setw(2) << t << ":    " << std::setw(4)
@@ -38,6 +42,21 @@ GameOfLifeKernel::GameOfLifeKernel(int rows, int cols, bool with_threads)
     zeros(xt0, rows, cols);
     zeros(xt1, rows, cols);
     set_initial_conditions();
+
+    // Set boundary condition function
+    switch(boundary_type) {
+        case BOUNDARY_CONSTANT:
+            fpr_apply_boundary_conditions = &GameOfLifeKernel::apply_constant_boundary_conditions;
+            break;
+        case BOUNDARY_PERIODIC:
+            fpr_apply_boundary_conditions = &GameOfLifeKernel::apply_periodic_boundary_conditions;
+            break;
+        case BOUNDARY_MIRROR:
+            fpr_apply_boundary_conditions = &GameOfLifeKernel::apply_mirror_boundary_conditions;
+            break;
+        default:
+            fpr_apply_boundary_conditions = &GameOfLifeKernel::apply_periodic_boundary_conditions;
+    }
 }
 
 GameOfLifeKernel::~GameOfLifeKernel() {
@@ -68,16 +87,17 @@ std::string GameOfLifeKernel::to_string() {
 void GameOfLifeKernel::timestep() {
     // compute inner domain
     if (with_threads) {
-        start_threads(&GameOfLifeKernel::timestep_inner_subdomain, this);
+        start_threads(&GameOfLifeKernel::timestep_subdomain, this);
     } else {
-        start_no_threads(&GameOfLifeKernel::timestep_inner_subdomain, this);
+        start_no_threads(&GameOfLifeKernel::timestep_subdomain, this);
     }
     // compute boundaries
-    timestep_boundaries_circular();
+    (this->*fpr_apply_boundary_conditions)();
     // swap buffers
     int **tmp = xt0;
     xt0 = xt1;
     xt1 = tmp;
+    zeros(xt1, rows, cols);
 }
 
 const int GameOfLifeKernel::get_xt_at(int row, int col) {
@@ -93,9 +113,14 @@ void GameOfLifeKernel::set_initial_conditions() {
 void GameOfLifeKernel::set_initial_conditions_in_subdomain(const int min_row,
                                                            const int max_row) {
     int sum = 0;
+    // Will be used to obtain a seed for the random number engine
+    std::random_device rd;  
+    // Standard mersenne_twister_engine seeded with rd()
+    std::mt19937 gen(rd()); 
+    std::uniform_int_distribution<int> distribution(0, 1);
     for (int i = min_row; i < max_row; i++) {
         for (int j = 0; j < cols; j++) {
-            xt0[i][j] = rand_minmax(0, 1);
+            xt0[i][j] = distribution(gen);
             sum += xt0[i][j];
         }
     }
@@ -103,7 +128,7 @@ void GameOfLifeKernel::set_initial_conditions_in_subdomain(const int min_row,
     std::cout << "Initial distribution: " << fraction << std::endl;
 }
 
-void GameOfLifeKernel::timestep_inner_subdomain(const int min_row,
+void GameOfLifeKernel::timestep_subdomain(const int min_row,
                                                 const int max_row) {
     // Loop over inner domain
     int min_col = 0;
@@ -121,7 +146,64 @@ void GameOfLifeKernel::timestep_inner_subdomain(const int min_row,
         }
     }
 }
-void GameOfLifeKernel::timestep_boundaries_circular() {
+
+void GameOfLifeKernel::apply_mirror_boundary_conditions() {
+    int i, j, sum = 0;
+    // compute edges
+    for (i = 1; i < rows - 1; i++) {
+        j = 0;
+        sum = xt0[i-1][j+1] + xt0[i-1][j] + xt0[i-1][j+1] + 
+              xt0[i  ][j+1] +               xt0[i  ][j+1] +
+              xt0[i+1][j+1] + xt0[i+1][j] + xt0[i+1][j+1];
+        fx(i, j, sum);
+        j = cols - 1;
+        sum = xt0[i-1][j-1] + xt0[i-1][j] + xt0[i-1][j-1] + 
+              xt0[i  ][j-1] +               xt0[i  ][j-1] +
+              xt0[i+1][j-1] + xt0[i+1][j] + xt0[i+1][j-1];
+        fx(i, j, sum);
+    }
+    for (j = 1; j < cols - 1; j++) {
+        i = 0;
+        sum = xt0[i+1][j-1] + xt0[i+1][j] + xt0[i+1][j+1] + 
+              xt0[i  ][j-1] +               xt0[i  ][j+1] +
+              xt0[i+1][j-1] + xt0[i+1][j] + xt0[i+1][j+1];
+        fx(i, j, sum);
+        i = rows - 1;
+        sum = xt0[i-1][j-1] + xt0[i-1][j] + xt0[i-1][j+1] + 
+              xt0[i  ][j-1] +               xt0[i  ][j+1] +
+              xt0[i-1][j-1] + xt0[i-1][j] + xt0[i-1][j+1];
+        fx(i, j, sum);
+    }
+    // compute corners
+    i = 0;
+    j = 0;
+    sum =                 xt0[i+1][j] + xt0[i+1][j+1] + 
+          xt0[i  ][j+1] +               xt0[i  ][j+1] +
+          xt0[i+1][j+1] + xt0[i+1][j] + xt0[i+1][j+1];
+    fx(i, j, sum);
+    i = 0;
+    j = cols - 1;
+    sum = xt0[i+1][j-1] + xt0[i+1][j] +
+          xt0[i  ][j-1] +               xt0[i  ][j-1] +
+          xt0[i+1][j-1] + xt0[i+1][j] + xt0[i+1][j-1];
+    fx(i, j, sum);
+    i = rows - 1;
+    j = 0;
+    sum = xt0[i-1][j+1] + xt0[i-1][j] + xt0[i-1][j+1] + 
+          xt0[i  ][j+1] +               xt0[i  ][j+1] +
+                        + xt0[i-1][j] + xt0[i-1][j+1];
+    fx(i, j, sum);
+    i = rows - 1;
+    j = cols - 1;
+    sum = xt0[i-1][j-1] + xt0[i-1][j] + xt0[i-1][j-1] + 
+          xt0[i  ][j-1] +               xt0[i  ][j-1] +
+          xt0[i-1][j-1] + xt0[i-1][j];
+    fx(i, j, sum);
+
+}
+
+
+void GameOfLifeKernel::apply_periodic_boundary_conditions() {
     int i, j, sum = 0;
     // compute edges
     for (i = 1; i < rows - 1; i++) {
@@ -175,7 +257,7 @@ void GameOfLifeKernel::timestep_boundaries_circular() {
     fx(i, j, sum);
 }
 
-void GameOfLifeKernel::timestep_boundaries() {
+void GameOfLifeKernel::apply_constant_boundary_conditions() {
     int i, j, sum = 0;
     // compute edges
     for (i = 1; i < rows - 1; i++) {
@@ -263,12 +345,6 @@ void GameOfLifeKernel::start_threads(void (GameOfLifeKernel::*fn)(int, int),
     for (int i = 0; i < batches.size(); i++) {
         threads[i].join();
     }
-}
-
-int GameOfLifeKernel::rand_minmax(int min, int max) {
-    static std::default_random_engine e{};
-    static std::uniform_int_distribution<int> d{min, max};
-    return d(e);
 }
 
 void GameOfLifeKernel::zeros(int **X, const int rows, const int cols) {

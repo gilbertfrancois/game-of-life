@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "../lib/GameOfLifeKernel.h"
-#include "config.h"
+#include "../lib/config.h"
 
 class App {
   public:

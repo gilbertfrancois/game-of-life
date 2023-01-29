@@ -13,9 +13,15 @@
 #define CELL_ALIVE "O"
 #define CELL_DEAD " "
 
+enum BOUNDARY_TYPES {
+    BOUNDARY_CONSTANT=0,
+    BOUNDARY_PERIODIC=1,
+    BOUNDARY_MIRROR=2
+};
+
 class GameOfLifeKernel {
   public:
-    GameOfLifeKernel(int rows, int cols, bool with_threads);
+    GameOfLifeKernel(int rows, int cols, int boundary_type, bool with_threads);
 
     virtual ~GameOfLifeKernel();
 
@@ -35,10 +41,12 @@ class GameOfLifeKernel {
     const int rows;
     const int cols;
     const bool with_threads;
+    const bool boundary_type;
     std::thread *threads;
     int **xt0;
     int **xt1;
     int n_cpus;
+    void (GameOfLifeKernel::*fpr_apply_boundary_conditions)();
 
     std::vector<std::tuple<int, int>> batches;
 
@@ -47,11 +55,13 @@ class GameOfLifeKernel {
     void set_initial_conditions_in_subdomain(const int min_row,
                                              const int max_row);
 
-    void timestep_inner_subdomain(const int min_row, const int max_row);
+    void timestep_subdomain(const int min_row, const int max_row);
 
-    void timestep_boundaries();
+    void apply_constant_boundary_conditions();
 
-    void timestep_boundaries_circular();
+    void apply_periodic_boundary_conditions();
+
+    void apply_mirror_boundary_conditions();
 
     void fx(const int i, const int j, const int sum);
 
@@ -60,8 +70,6 @@ class GameOfLifeKernel {
 
     void start_threads(void (GameOfLifeKernel::*fn)(int, int),
                        GameOfLifeKernel *kernel);
-
-    int rand_minmax(int min, int max);
 
     void zeros(int **X, const int rows, const int cols);
 

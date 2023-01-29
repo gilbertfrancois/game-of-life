@@ -1,7 +1,7 @@
 #ifndef GAMEOFLIFE_GAMEOFLIFEGUI_H
 #define GAMEOFLIFE_GAMEOFLIFEGUI_H
 
-#include "config.h"
+#include "../lib/config.h"
 #include "../lib/GameOfLifeKernel.h"
 
 int parse_arguments(std::vector<std::string> args, Config *config);

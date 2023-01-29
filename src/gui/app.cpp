@@ -12,7 +12,7 @@ App::App(Config config_) : config(config_) {
     running = false;
     init_video();
     kernel =
-        new GameOfLifeKernel(config.rows, config.cols, config.with_threads);
+        new GameOfLifeKernel(config.rows, config.cols, config.boundary_type, config.with_threads);
 }
 
 App::~App() {
