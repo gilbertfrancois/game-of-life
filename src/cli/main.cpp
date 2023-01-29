@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
     int n_threads = kernel->get_n_threads();
     int n_cpus = kernel->get_n_cpus();
     // Allow the user to read the domain slicing in the terminal window.
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::seconds(2));
     // Game loop.
     for (auto i = 0; i < config.n_steps; i++) {
         // VT100 compatible escape codes to clear the screen.
@@ -159,7 +159,7 @@ int main(int argc, char **argv) {
         std::flush(std::cout);
         // Go one timestep forward.
         kernel->timestep();
-        std::this_thread::sleep_for(0.1s);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     // Cleanup
     delete kernel;
