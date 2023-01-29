@@ -6,6 +6,7 @@ This program shows the well known Game of Life. I've chosen this simulation as a
 * Member function pointers as function arguments,
 * Concurrency, domain slicing and treating boundary conditions,
 * Development of a multi platform, multi architecture console and graphical application.
+* Using [vcpkg](https://vcpkg.io) C/C++ cross platform dependency package manager, working with [CMake](https://cmake.org).
 
 
 
@@ -43,52 +44,21 @@ make
 
 ## Building on Windows with Visual Studio 2022
 
+At the time of writing, Microsoft Visual Studio 2022 cannot work well with git submodules (yet). But it is easy to do the extra steps in a terminal.
+
 - Open a new project and clone from https://github.com/gilbertfrancois/game-of-life.git
 
 - Open ` Tools -> Command Line -> Developer Command Prompt` at solution level and run this command: 
 
   ```sh
   git submodule update
-  cd 3rdparty\vcpkg
-  git pull origin master
   ```
 
-  
+- Click `Project -> Delete cache and reconfigure`. CMake will now automatically install vcpkg and libSDL2 for the project.
 
+- Click `Build -> Build All`.
 
-
-## Building on Windows with Visual Studio (2019 and before)
-
-- Clone the project from https://github.com/gilbertfrancois/game-of-life.git
-- Download `SDL2-devel-2.xx-VC.zip` from [https://github.com/libsdl-org/SDL/releases](https://github.com/libsdl-org/SDL/releases), where 2.xx is the latest version that is available.  Unzip and copy the files e.g. in: `game-of-life/3rdparty/sdl2` so that the project folder structure looks like:
-
-	```sh
-	C:...path to...\game-of-life>
-	├───3rdparty
-	│   └───sdl2
-	│       ├───cmake
-	│       ├───docs
-	│       ├───include
-	│       └───lib
-	│           ├───x64
-	│           └───x86
-	├───cmake
-	└───src
-    ├───cli
-    ├───gui
-    └───lib
-	```
-
-- In Visual Studio, go to Project -> CMake settings and add the variable SDL2_DIR:
-
-|                                                              |
-| ------------------------------------------------------------ |
-| ![Visual Studio settings](./assets/images/vs2022_cmake_settings.png) |
-| Projects -> CMake settings \| CMake variables and cache -> **SDL2_DIR <path>** |
-
-- Build the project
-
-- Copy `3rdparty/sdl2/lib/SDL2.dll` to the build folder, where game-of-life-gui.exe is located.
+![vcpkg](./assets/images/vs2022_cmake_vcpkg.png)
 
 
 
@@ -136,7 +106,18 @@ The GUI can be terminated with `[q]` or `[esc]`.
 
 
 
-## Boudary conditions
+## Game of Life rules
+
+The universe of the Game of Life is [an infinite, two-dimensional orthogonal grid of square](https://en.wikipedia.org/wiki/Square_tiling) *cells*, each of which is in one of two possible states, *live* or *dead* (or *populated* and *unpopulated*, respectively). Every cell interacts with its eight *[neighbours](https://en.wikipedia.org/wiki/Moore_neighborhood)*, which are the cells that are horizontally, vertically, or diagonally  adjacent. At each step in time, the following transitions occur:
+
+1. Any live cell with fewer than two live neighbours dies, as if by underpopulation.
+2. Any live cell with two or three live neighbours lives on to the next generation.
+3. Any live cell with more than three live neighbours dies, as if by overpopulation.
+4. Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
+
+
+
+## Boundary conditions
 
 There are 3 possible boundary conditions:
 
