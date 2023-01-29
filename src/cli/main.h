@@ -12,8 +12,8 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 //
-#ifndef GAMEOFLIFE_GAMEOFLIFECLI_H
-#define GAMEOFLIFE_GAMEOFLIFECLI_H
+#ifndef GAMEOFLIFE_CLI_MAIN_H
+#define GAMEOFLIFE_CLI_MAIN_H
 
 #include "../lib/GameOfLifeKernel.h"
 #include "../lib/config.h"

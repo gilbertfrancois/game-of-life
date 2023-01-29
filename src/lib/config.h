@@ -12,8 +12,8 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 //
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef GAMEOFLIFE_CONFIG_H
+#define GAMEOFLIFE_CONFIG_H
 
 typedef struct {
     int rows;

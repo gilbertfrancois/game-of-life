@@ -86,4 +86,4 @@ class GameOfLifeKernel {
     void batch_ranges(int n_samples, int n_batches);
 };
 
-#endif // GAMEOFLIFE_GAMEOFLIFEKERNEL_H
+#endif
