@@ -34,7 +34,7 @@ int parse_arguments(std::vector<std::string> args, Config *config) {
                 << "   --steps <number>      : number of steps, default = 1000."
                 << std::endl;
             std::cout
-                << "   --bt <number>      : boundary type: 0=const, 1=periodic, 2=mirror, default=1."
+                << "   --bt <number>         : boundary type: 0=const, 1=periodic, 2=mirror, default=1."
                 << std::endl;
             std::cout
                 << "   --zoom <number>       : zoom factor, default = 1."
