@@ -5,15 +5,17 @@
 #include "GameOfLifeKernel.h"
 #include <assert.h>
 #include <cmath>
+#include <ctime>
 #include <iomanip>
 #include <iostream>
 #include <random>
 #include <sstream>
-#include <ctime>
 /* #include <cstdlib> */
 
-GameOfLifeKernel::GameOfLifeKernel(int rows, int cols, int boundary_type, bool with_threads)
-    : rows(rows), cols(cols), boundary_type(boundary_type), with_threads(with_threads) {
+GameOfLifeKernel::GameOfLifeKernel(int rows, int cols, int boundary_type,
+                                   bool with_threads)
+    : rows(rows), cols(cols), boundary_type(boundary_type),
+      with_threads(with_threads) {
     // Setup concurrency
     n_cpus = std::thread::hardware_concurrency();
     if (with_threads) {
@@ -44,18 +46,22 @@ GameOfLifeKernel::GameOfLifeKernel(int rows, int cols, int boundary_type, bool w
     set_initial_conditions();
 
     // Set boundary condition function
-    switch(boundary_type) {
-        case BOUNDARY_CONSTANT:
-            fpr_apply_boundary_conditions = &GameOfLifeKernel::apply_constant_boundary_conditions;
-            break;
-        case BOUNDARY_PERIODIC:
-            fpr_apply_boundary_conditions = &GameOfLifeKernel::apply_periodic_boundary_conditions;
-            break;
-        case BOUNDARY_MIRROR:
-            fpr_apply_boundary_conditions = &GameOfLifeKernel::apply_mirror_boundary_conditions;
-            break;
-        default:
-            fpr_apply_boundary_conditions = &GameOfLifeKernel::apply_periodic_boundary_conditions;
+    switch (boundary_type) {
+    case BOUNDARY_CONSTANT:
+        fpr_apply_boundary_conditions =
+            &GameOfLifeKernel::apply_constant_boundary_conditions;
+        break;
+    case BOUNDARY_PERIODIC:
+        fpr_apply_boundary_conditions =
+            &GameOfLifeKernel::apply_periodic_boundary_conditions;
+        break;
+    case BOUNDARY_MIRROR:
+        fpr_apply_boundary_conditions =
+            &GameOfLifeKernel::apply_mirror_boundary_conditions;
+        break;
+    default:
+        fpr_apply_boundary_conditions =
+            &GameOfLifeKernel::apply_periodic_boundary_conditions;
     }
 }
 
@@ -67,21 +73,6 @@ GameOfLifeKernel::~GameOfLifeKernel() {
     delete[] xt0;
     delete[] xt1;
     delete[] threads;
-}
-
-int GameOfLifeKernel::get_n_cpus() { return n_cpus; }
-
-int GameOfLifeKernel::get_n_threads() { return batches.size(); }
-
-std::string GameOfLifeKernel::to_string() {
-    std::stringstream ss;
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
-            ss << ((xt0[i][j] == 1) ? CELL_ALIVE : CELL_DEAD);
-        }
-        ss << std::endl;
-    }
-    return ss.str();
 }
 
 void GameOfLifeKernel::timestep() {
@@ -100,11 +91,26 @@ void GameOfLifeKernel::timestep() {
     zeros(xt1, rows, cols);
 }
 
+int GameOfLifeKernel::get_n_threads() { return batches.size(); }
+
+int GameOfLifeKernel::get_n_cpus() { return n_cpus; }
+
+int **GameOfLifeKernel::get_xt() const { return xt0; }
+
 const int GameOfLifeKernel::get_xt_at(int row, int col) {
     return xt0[row][col];
 }
 
-int **GameOfLifeKernel::get_xt() const { return xt0; }
+std::string GameOfLifeKernel::to_string() {
+    std::stringstream ss;
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            ss << ((xt0[i][j] == 1) ? CELL_ALIVE : CELL_DEAD);
+        }
+        ss << std::endl;
+    }
+    return ss.str();
+}
 
 void GameOfLifeKernel::set_initial_conditions() {
     set_initial_conditions_in_subdomain(0, rows);
@@ -114,9 +120,9 @@ void GameOfLifeKernel::set_initial_conditions_in_subdomain(const int min_row,
                                                            const int max_row) {
     int sum = 0;
     // Will be used to obtain a seed for the random number engine
-    std::random_device rd;  
+    std::random_device rd;
     // Standard mersenne_twister_engine seeded with rd()
-    std::mt19937 gen(rd()); 
+    std::mt19937 gen(rd());
     std::uniform_int_distribution<int> distribution(0, 1);
     for (int i = min_row; i < max_row; i++) {
         for (int j = 0; j < cols; j++) {
@@ -124,12 +130,12 @@ void GameOfLifeKernel::set_initial_conditions_in_subdomain(const int min_row,
             sum += xt0[i][j];
         }
     }
-    float fraction = (float) sum / (rows*cols);
+    float fraction = (float)sum / (rows * cols);
     std::cout << "Initial distribution: " << fraction << std::endl;
 }
 
 void GameOfLifeKernel::timestep_subdomain(const int min_row,
-                                                const int max_row) {
+                                          const int max_row) {
     // Loop over inner domain
     int min_col = 0;
     int max_col = cols - 1;
@@ -139,122 +145,12 @@ void GameOfLifeKernel::timestep_subdomain(const int min_row,
         for (int j = min_col; j < max_col; j++) {
             if (j == 0 || j >= cols - 1)
                 continue;
-            int sum = xt0[i-1][j-1] + xt0[i-1][j] + xt0[i-1][j+1] + 
-                      xt0[i  ][j-1] +               xt0[i  ][j+1] +
-                      xt0[i+1][j-1] + xt0[i+1][j] + xt0[i+1][j+1];
+            int sum = xt0[i - 1][j - 1] + xt0[i - 1][j] + xt0[i - 1][j + 1] +
+                      xt0[i][j - 1] + xt0[i][j + 1] + xt0[i + 1][j - 1] +
+                      xt0[i + 1][j] + xt0[i + 1][j + 1];
             fx(i, j, sum);
         }
     }
-}
-
-void GameOfLifeKernel::apply_mirror_boundary_conditions() {
-    int i, j, sum = 0;
-    // compute edges
-    for (i = 1; i < rows - 1; i++) {
-        j = 0;
-        sum = xt0[i-1][j+1] + xt0[i-1][j] + xt0[i-1][j+1] + 
-              xt0[i  ][j+1] +               xt0[i  ][j+1] +
-              xt0[i+1][j+1] + xt0[i+1][j] + xt0[i+1][j+1];
-        fx(i, j, sum);
-        j = cols - 1;
-        sum = xt0[i-1][j-1] + xt0[i-1][j] + xt0[i-1][j-1] + 
-              xt0[i  ][j-1] +               xt0[i  ][j-1] +
-              xt0[i+1][j-1] + xt0[i+1][j] + xt0[i+1][j-1];
-        fx(i, j, sum);
-    }
-    for (j = 1; j < cols - 1; j++) {
-        i = 0;
-        sum = xt0[i+1][j-1] + xt0[i+1][j] + xt0[i+1][j+1] + 
-              xt0[i  ][j-1] +               xt0[i  ][j+1] +
-              xt0[i+1][j-1] + xt0[i+1][j] + xt0[i+1][j+1];
-        fx(i, j, sum);
-        i = rows - 1;
-        sum = xt0[i-1][j-1] + xt0[i-1][j] + xt0[i-1][j+1] + 
-              xt0[i  ][j-1] +               xt0[i  ][j+1] +
-              xt0[i-1][j-1] + xt0[i-1][j] + xt0[i-1][j+1];
-        fx(i, j, sum);
-    }
-    // compute corners
-    i = 0;
-    j = 0;
-    sum =                 xt0[i+1][j] + xt0[i+1][j+1] + 
-          xt0[i  ][j+1] +               xt0[i  ][j+1] +
-          xt0[i+1][j+1] + xt0[i+1][j] + xt0[i+1][j+1];
-    fx(i, j, sum);
-    i = 0;
-    j = cols - 1;
-    sum = xt0[i+1][j-1] + xt0[i+1][j] +
-          xt0[i  ][j-1] +               xt0[i  ][j-1] +
-          xt0[i+1][j-1] + xt0[i+1][j] + xt0[i+1][j-1];
-    fx(i, j, sum);
-    i = rows - 1;
-    j = 0;
-    sum = xt0[i-1][j+1] + xt0[i-1][j] + xt0[i-1][j+1] + 
-          xt0[i  ][j+1] +               xt0[i  ][j+1] +
-                        + xt0[i-1][j] + xt0[i-1][j+1];
-    fx(i, j, sum);
-    i = rows - 1;
-    j = cols - 1;
-    sum = xt0[i-1][j-1] + xt0[i-1][j] + xt0[i-1][j-1] + 
-          xt0[i  ][j-1] +               xt0[i  ][j-1] +
-          xt0[i-1][j-1] + xt0[i-1][j];
-    fx(i, j, sum);
-
-}
-
-
-void GameOfLifeKernel::apply_periodic_boundary_conditions() {
-    int i, j, sum = 0;
-    // compute edges
-    for (i = 1; i < rows - 1; i++) {
-        j = 0;
-        sum = xt0[i-1][cols-1] + xt0[i-1][j] + xt0[i-1][j+1] + 
-              xt0[i  ][cols-1] +               xt0[i  ][j+1] +
-              xt0[i+1][cols-1] + xt0[i+1][j] + xt0[i+1][j+1];
-        fx(i, j, sum);
-        j = cols - 1;
-        sum = xt0[i-1][j-1] + xt0[i-1][j] + xt0[i-1][0] + 
-              xt0[i  ][j-1] +               xt0[i  ][0] +
-              xt0[i+1][j-1] + xt0[i+1][j] + xt0[i+1][0];
-        fx(i, j, sum);
-    }
-    for (j = 1; j < cols - 1; j++) {
-        i = 0;
-        sum = xt0[rows-1][j-1] + xt0[rows-1][j] + xt0[rows-1][j+1] + 
-              xt0[i  ][j-1] +               xt0[i  ][j+1] +
-              xt0[i+1][j-1] + xt0[i+1][j] + xt0[i+1][j+1];
-        fx(i, j, sum);
-        i = rows - 1;
-        sum = xt0[i-1][j-1] + xt0[i-1][j] + xt0[i-1][j+1] + 
-              xt0[i  ][j-1] +               xt0[i  ][j+1] +
-              xt0[0][j-1] + xt0[0][j] + xt0[0][j+1];
-        fx(i, j, sum);
-    }
-    // compute corners
-    i = 0;
-    j = 0;
-    sum = xt0[rows-1][cols-1] + xt0[rows-1][j] + xt0[rows-1][j+1] + 
-          xt0[i  ][cols-1] +               xt0[i  ][j+1] +
-          xt0[i+1][cols-1] + xt0[i+1][j] + xt0[i+1][j+1];
-    fx(i, j, sum);
-    i = 0;
-    j = cols - 1;
-    sum = xt0[rows-1][j-1] + xt0[rows-1][j] + xt0[rows-1][0] + 
-          xt0[i  ][j-1] +               xt0[i  ][0] +
-          xt0[i+1][j-1] + xt0[i+1][j] + xt0[i+1][0];
-    fx(i, j, sum);
-    i = rows - 1;
-    j = 0;
-    sum = xt0[i-1][cols-1] + xt0[i-1][j] + xt0[i-1][j+1] + 
-          xt0[i  ][cols-1] +               xt0[i  ][j+1] +
-          xt0[0][cols-1] + xt0[0][j] + xt0[0][j+1];
-    fx(i, j, sum);
-    i = rows - 1;
-    j = cols - 1;
-    sum = xt0[i-1][j-1] + xt0[i-1][j] + xt0[i-1][0] + 
-          xt0[i  ][j-1] +               xt0[i  ][0] +
-          xt0[0][j-1] + xt0[0][j] + xt0[0][0];
-    fx(i, j, sum);
 }
 
 void GameOfLifeKernel::apply_constant_boundary_conditions() {
@@ -262,47 +158,144 @@ void GameOfLifeKernel::apply_constant_boundary_conditions() {
     // compute edges
     for (i = 1; i < rows - 1; i++) {
         j = 0;
-        sum = xt0[i-1][j] + xt0[i-1][j+1] + 
-                            xt0[i  ][j+1] +
-              xt0[i+1][j] + xt0[i+1][j+1];
+        sum = xt0[i - 1][j] + xt0[i - 1][j + 1] + xt0[i][j + 1] +
+              xt0[i + 1][j] + xt0[i + 1][j + 1];
         fx(i, j, sum);
         j = cols - 1;
-        sum = xt0[i-1][j-1] + xt0[i-1][j] + 
-              xt0[i  ][j-1] +               
-              xt0[i+1][j-1] + xt0[i+1][j];
+        sum = xt0[i - 1][j - 1] + xt0[i - 1][j] + xt0[i][j - 1] +
+              xt0[i + 1][j - 1] + xt0[i + 1][j];
         fx(i, j, sum);
     }
     for (j = 1; j < cols - 1; j++) {
         i = 0;
-        sum = xt0[i  ][j-1] +               xt0[i  ][j+1] +
-              xt0[i+1][j-1] + xt0[i+1][j] + xt0[i+1][j+1];
+        sum = xt0[i][j - 1] + xt0[i][j + 1] + xt0[i + 1][j - 1] +
+              xt0[i + 1][j] + xt0[i + 1][j + 1];
         fx(i, j, sum);
         i = rows - 1;
-        sum = xt0[i-1][j-1] + xt0[i-1][j] + xt0[i-1][j+1] + 
-              xt0[i  ][j-1] +               xt0[i  ][j+1];
-                  
+        sum = xt0[i - 1][j - 1] + xt0[i - 1][j] + xt0[i - 1][j + 1] +
+              xt0[i][j - 1] + xt0[i][j + 1];
+
         fx(i, j, sum);
     }
     // compute corners
     i = 0;
     j = 0;
-    sum =               xt0[i  ][j+1] +
-          xt0[i+1][j] + xt0[i+1][j+1];
+    sum = xt0[i][j + 1] + xt0[i + 1][j] + xt0[i + 1][j + 1];
     fx(i, j, sum);
     i = 0;
     j = cols - 1;
-    sum = xt0[i  ][j-1] + 
-          xt0[i+1][j-1] + xt0[i+1][j];
+    sum = xt0[i][j - 1] + xt0[i + 1][j - 1] + xt0[i + 1][j];
     fx(i, j, sum);
     i = rows - 1;
     j = 0;
-    sum = xt0[i-1][j] + xt0[i-1][j+1] + 
-                        xt0[i  ][j+1];
+    sum = xt0[i - 1][j] + xt0[i - 1][j + 1] + xt0[i][j + 1];
     fx(i, j, sum);
     i = rows - 1;
     j = cols - 1;
-    sum = xt0[i-1][j-1] + xt0[i-1][j] +
-          xt0[i  ][j-1];             
+    sum = xt0[i - 1][j - 1] + xt0[i - 1][j] + xt0[i][j - 1];
+    fx(i, j, sum);
+}
+
+void GameOfLifeKernel::apply_periodic_boundary_conditions() {
+    int i, j, sum = 0;
+    // compute edges
+    for (i = 1; i < rows - 1; i++) {
+        j = 0;
+        sum = xt0[i - 1][cols - 1] + xt0[i - 1][j] + xt0[i - 1][j + 1] +
+              xt0[i][cols - 1] + xt0[i][j + 1] + xt0[i + 1][cols - 1] +
+              xt0[i + 1][j] + xt0[i + 1][j + 1];
+        fx(i, j, sum);
+        j = cols - 1;
+        sum = xt0[i - 1][j - 1] + xt0[i - 1][j] + xt0[i - 1][0] +
+              xt0[i][j - 1] + xt0[i][0] + xt0[i + 1][j - 1] + xt0[i + 1][j] +
+              xt0[i + 1][0];
+        fx(i, j, sum);
+    }
+    for (j = 1; j < cols - 1; j++) {
+        i = 0;
+        sum = xt0[rows - 1][j - 1] + xt0[rows - 1][j] + xt0[rows - 1][j + 1] +
+              xt0[i][j - 1] + xt0[i][j + 1] + xt0[i + 1][j - 1] +
+              xt0[i + 1][j] + xt0[i + 1][j + 1];
+        fx(i, j, sum);
+        i = rows - 1;
+        sum = xt0[i - 1][j - 1] + xt0[i - 1][j] + xt0[i - 1][j + 1] +
+              xt0[i][j - 1] + xt0[i][j + 1] + xt0[0][j - 1] + xt0[0][j] +
+              xt0[0][j + 1];
+        fx(i, j, sum);
+    }
+    // compute corners
+    i = 0;
+    j = 0;
+    sum = xt0[rows - 1][cols - 1] + xt0[rows - 1][j] + xt0[rows - 1][j + 1] +
+          xt0[i][cols - 1] + xt0[i][j + 1] + xt0[i + 1][cols - 1] +
+          xt0[i + 1][j] + xt0[i + 1][j + 1];
+    fx(i, j, sum);
+    i = 0;
+    j = cols - 1;
+    sum = xt0[rows - 1][j - 1] + xt0[rows - 1][j] + xt0[rows - 1][0] +
+          xt0[i][j - 1] + xt0[i][0] + xt0[i + 1][j - 1] + xt0[i + 1][j] +
+          xt0[i + 1][0];
+    fx(i, j, sum);
+    i = rows - 1;
+    j = 0;
+    sum = xt0[i - 1][cols - 1] + xt0[i - 1][j] + xt0[i - 1][j + 1] +
+          xt0[i][cols - 1] + xt0[i][j + 1] + xt0[0][cols - 1] + xt0[0][j] +
+          xt0[0][j + 1];
+    fx(i, j, sum);
+    i = rows - 1;
+    j = cols - 1;
+    sum = xt0[i - 1][j - 1] + xt0[i - 1][j] + xt0[i - 1][0] + xt0[i][j - 1] +
+          xt0[i][0] + xt0[0][j - 1] + xt0[0][j] + xt0[0][0];
+    fx(i, j, sum);
+}
+
+void GameOfLifeKernel::apply_mirror_boundary_conditions() {
+    int i, j, sum = 0;
+    // compute edges
+    for (i = 1; i < rows - 1; i++) {
+        j = 0;
+        sum = xt0[i - 1][j + 1] + xt0[i - 1][j] + xt0[i - 1][j + 1] +
+              xt0[i][j + 1] + xt0[i][j + 1] + xt0[i + 1][j + 1] +
+              xt0[i + 1][j] + xt0[i + 1][j + 1];
+        fx(i, j, sum);
+        j = cols - 1;
+        sum = xt0[i - 1][j - 1] + xt0[i - 1][j] + xt0[i - 1][j - 1] +
+              xt0[i][j - 1] + xt0[i][j - 1] + xt0[i + 1][j - 1] +
+              xt0[i + 1][j] + xt0[i + 1][j - 1];
+        fx(i, j, sum);
+    }
+    for (j = 1; j < cols - 1; j++) {
+        i = 0;
+        sum = xt0[i + 1][j - 1] + xt0[i + 1][j] + xt0[i + 1][j + 1] +
+              xt0[i][j - 1] + xt0[i][j + 1] + xt0[i + 1][j - 1] +
+              xt0[i + 1][j] + xt0[i + 1][j + 1];
+        fx(i, j, sum);
+        i = rows - 1;
+        sum = xt0[i - 1][j - 1] + xt0[i - 1][j] + xt0[i - 1][j + 1] +
+              xt0[i][j - 1] + xt0[i][j + 1] + xt0[i - 1][j - 1] +
+              xt0[i - 1][j] + xt0[i - 1][j + 1];
+        fx(i, j, sum);
+    }
+    // compute corners
+    i = 0;
+    j = 0;
+    sum = xt0[i + 1][j] + xt0[i + 1][j + 1] + xt0[i][j + 1] + xt0[i][j + 1] +
+          xt0[i + 1][j + 1] + xt0[i + 1][j] + xt0[i + 1][j + 1];
+    fx(i, j, sum);
+    i = 0;
+    j = cols - 1;
+    sum = xt0[i + 1][j - 1] + xt0[i + 1][j] + xt0[i][j - 1] + xt0[i][j - 1] +
+          xt0[i + 1][j - 1] + xt0[i + 1][j] + xt0[i + 1][j - 1];
+    fx(i, j, sum);
+    i = rows - 1;
+    j = 0;
+    sum = xt0[i - 1][j + 1] + xt0[i - 1][j] + xt0[i - 1][j + 1] +
+          xt0[i][j + 1] + xt0[i][j + 1] + +xt0[i - 1][j] + xt0[i - 1][j + 1];
+    fx(i, j, sum);
+    i = rows - 1;
+    j = cols - 1;
+    sum = xt0[i - 1][j - 1] + xt0[i - 1][j] + xt0[i - 1][j - 1] +
+          xt0[i][j - 1] + xt0[i][j - 1] + xt0[i - 1][j - 1] + xt0[i - 1][j];
     fx(i, j, sum);
 }
 

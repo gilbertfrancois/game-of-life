@@ -14,9 +14,9 @@
 #define CELL_DEAD " "
 
 enum BOUNDARY_TYPES {
-    BOUNDARY_CONSTANT=0,
-    BOUNDARY_PERIODIC=1,
-    BOUNDARY_MIRROR=2
+    BOUNDARY_CONSTANT = 0,
+    BOUNDARY_PERIODIC = 1,
+    BOUNDARY_MIRROR = 2
 };
 
 class GameOfLifeKernel {
@@ -25,17 +25,17 @@ class GameOfLifeKernel {
 
     virtual ~GameOfLifeKernel();
 
+    void timestep();
+
     int get_n_threads();
 
     int get_n_cpus();
 
-    std::string to_string();
-
-    void timestep();
+    int **get_xt() const;
 
     const int get_xt_at(int row, int col);
 
-    int **get_xt() const;
+    std::string to_string();
 
   private:
     const int rows;
