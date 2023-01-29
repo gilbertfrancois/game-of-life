@@ -16,16 +16,22 @@ This program shows the well known Game of Life. I've chosen this simulation as a
 
 
 
-## Building on macOS
+## Building on macOS or Linux
+
+The project uses [vcpkg dependency manager](https://vcpkg.io) and is included as a sub-repository in this project. It will automatically download and build libSDL2 for you. 
+
+When cloning the project, don't forget the `--recurse-submodules` option.
 
 ```sh
-# Install SDL2
-brew install sdl2
-
-# Clone and build the project
+# Clone the project
 git clone --recurse-submodules https://github.com/gilbertfrancois/game-of-life.git
+
 cd game-of-life
+
+# Bootstrap vcpkg
 ./3rdparty/vcpkg/bootstrap-vcpkg.sh
+
+# Build the project and its dependencies
 mkdir build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
@@ -35,25 +41,13 @@ make
 
 
 
-## Building on Linux
+## Building on Windows with Visual Studio 2022
 
-```sh
-# Install SDL2 (Ubuntu / Debian)
-apt install libsdl2
-
-# Clone and build the project
-git clone --recurse-submodules https://github.com/gilbertfrancois/game-of-life.git
-cd game-of-life
-./3rdparty/vcpkg/bootstrap-vcpkg.sh
-mkdir build
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-make
-```
+To do...
 
 
 
-## Building on Windows with Visual Studio
+## Building on Windows with Visual Studio (2019 and before)
 
 - Clone the project from https://github.com/gilbertfrancois/game-of-life.git
 - Download `SDL2-devel-2.xx-VC.zip` from [https://github.com/libsdl-org/SDL/releases](https://github.com/libsdl-org/SDL/releases), where 2.xx is the latest version that is available.  Unzip and copy the files e.g. in: `game-of-life/3rdparty/sdl2` so that the project folder structure looks like:
