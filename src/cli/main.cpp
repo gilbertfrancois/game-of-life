@@ -20,7 +20,7 @@
 #include <string>
 #include <thread>
 #include <vector>
-#ifdef _WIN32
+#if defined(_WIN32)
 #include <Windows.h>
 #else
 #include <sys/ioctl.h>
@@ -29,8 +29,6 @@
 
 #include "main.h"
 
-// https://www.linuxquestions.org/questions/programming-9/get-width-height-of-a-terminal-window-in-c-810739/
-//
 using namespace std::chrono_literals;
 
 void get_terminal_size(Config *config) {
@@ -38,12 +36,12 @@ void get_terminal_size(Config *config) {
     int arg_cols = config->cols;
     int term_rows = 0;
     int term_cols = 0;
-#ifdef _WIN32
+#if defined(_WIN32)
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
     term_cols = csbi.srWindow.Right - csbi.srWindow.Left + 1;
     term_rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
-#elifdef TIOCGSIZE
+#elif defined(TIOCGSIZE)
     struct ttysize ts;
     ioctl(STDIN_FILENO, TIOCGSIZE, &ts);
     term_cols = ts.ts_cols;
