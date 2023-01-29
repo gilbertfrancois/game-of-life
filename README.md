@@ -108,6 +108,7 @@ game-of-life-gui [options]
    --fullscreen          : display full screen.
    --zoom <number>       : zoom factor, default = 1.
    --steps <number>      : number of steps, default = 1000.
+   --bt <number>         : boundary type: 0=const, 1=periodic, 2=mirror, default=1.
    --without-threads     : compute single threaded.
    --with-threads        : compute multi-threaded.
    -h, --help            : info and help message.
@@ -119,12 +120,25 @@ game-of-life-cli [options]
    --width <number>      : width of the domain, default is current terminal width.
    --height <number>     : height of the domain, default is current terminal height.
    --steps <number>      : number of steps, default = 1000.
+   --bt <number>         : boundary type: 0=const, 1=periodic, 2=mirror, default=1.
    --without-threads     : compute single threaded.
    --with-threads        : compute multi-threaded.
    -h, --help            : info and help message.
 ```
 
 The GUI can be terminated with `[q]` or `[esc]`.
+
+
+
+## Boudary conditions
+
+There are 3 possible boundary conditions:
+
+| Number | Type     | Description                                                  |
+| ------ | -------- | ------------------------------------------------------------ |
+| 0      | Constant | All cells on the perimeter are dead.                         |
+| 1      | Periodic | The neighbors to a cell at the edge of the grid are those cells at the opposite edge of the grid. |
+| 2      | Mirror   | The neightbors to a cell at the edge have the same value as the cell in the normal direction of the edge. |
 
 
 
