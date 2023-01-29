@@ -54,7 +54,7 @@ At the time of writing, Microsoft Visual Studio 2022 cannot work well with git s
   git submodule update
   ```
 
-- Click `Project -> Delete cache and reconfigure`. CMake will now automatically install vcpkg and libSDL2 for the project.
+- Click `Project -> Delete cache and reconfigure`. CMake will now automatically install vcpkg and libSDL2 for the project. (See screenshot below.)
 
 - Click `Build -> Build All`.
 
