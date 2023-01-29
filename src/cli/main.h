@@ -18,7 +18,7 @@
 #include "../lib/GameOfLifeKernel.h"
 #include "../lib/config.h"
 
-void get_terminal_size(int *rows, int *cols);
+void get_terminal_size(Config *config);
 
 int parse_arguments(std::vector<std::string> args, Config *config);
 
