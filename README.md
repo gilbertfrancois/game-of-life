@@ -19,6 +19,18 @@ This program shows the well known Game of Life. I've chosen this simulation as a
 
 ## Building on macOS or Linux
 
+On Linux, run first:
+
+```sh
+sudo apt install nodejs cmake ninja-build gcc build-essential git zip unzip
+```
+
+If running on Linux ARM, set the environment variable:
+
+```sh
+export VCPKG_FORCE_SYSTEM_BINARIES=arm
+```
+
 The project uses [vcpkg dependency manager](https://vcpkg.io) and is included as a sub-repository in this project. It will automatically download and build libSDL2 for you. 
 
 When cloning the project, don't forget the `--recurse-submodules` option.
@@ -40,7 +52,7 @@ make
 
 ```
 
-
+*Note: if you see error messages when running cmake, please visit the [Troubleshooting](#Troubleshooting) section on the bottom of the page.*
 
 ## Building on Windows with Visual Studio 2022
 
@@ -214,3 +226,41 @@ void Foo::printOutputCppMemberFunctionSelf() {
 ## Domain slicing
 
 The Game of Life simulation can be distributed in many different ways. Since it is a cellular automata, every cell is updated from *t_0* -> *t_1* fully independently. It only needs the states from its direct neighbors. This code used the domain slicing approach, which can easily be applied to other tasks, like image processing. The domain is divided horizontally in row batches. Each slice is then sent to another thread where its new state is computed. After the computation, the threads are joined and the new state is set as the current state (swap buffers). To prevent excessive memory allocation and destruction for each time step, only the memory range of the slice is given to the threads. All threads share the same memory block. This is fine, since they read the current state from buffer 1 and update only their own part in buffer 2.
+
+
+
+## Troubleshooting
+
+### Issue 1:
+
+On Linux (Ubuntu / Debian), when you see the following message:
+
+```sh
+...
+CMake Error: CMake was unable to find a build program corresponding to "Unix Makefiles".  CMAKE_MAKE_PROGRAM is not set.  You probably need to select a different build tool.
+...
+-- Configuring incomplete, errors occurred!
+```
+
+Most likely you don't have all tools needed. The error message is a bit misleading. It does not always mean that you miss e.g. make, but it can also be that it misses e.g. curl. Please run:
+
+```sh
+sudo apt install build-essential curl zip unzip tar
+```
+
+This might solve the issue.
+
+
+
+### Issue 2:
+
+On **Ubuntu 18.04 (arm64)** with **gcc 7.5**, the vcpkg fails to build from source. The working solution is to use clang 10 or higher:
+
+```sh
+sudo apt install clang-11 --install-suggests
+export CC=/usr/bin/clang-10
+export CXX=/usr/bin/clang++-10
+
+./3rdparty/vspkg/bootstrap-vcpkg.sh
+```
+
