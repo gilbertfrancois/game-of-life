@@ -257,7 +257,7 @@ This might solve the issue.
 On **Ubuntu 18.04 (arm64)** with **gcc 7.5**, the vcpkg fails to build from source. The working solution is to use clang 10 or higher:
 
 ```sh
-sudo apt install clang-11 --install-suggests
+sudo apt install clang-10 --install-suggests
 export CC=/usr/bin/clang-10
 export CXX=/usr/bin/clang++-10
 
