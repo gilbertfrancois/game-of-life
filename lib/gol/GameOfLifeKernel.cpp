@@ -12,7 +12,7 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 //
-#include "GameOfLifeKernel.h"
+#include "gol/GameOfLifeKernel.h"
 #include <assert.h>
 #include <cmath>
 #include <ctime>

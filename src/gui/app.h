@@ -23,8 +23,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "../lib/GameOfLifeKernel.h"
-#include "../lib/config.h"
+#include "gol/GameOfLifeKernel.h"
+#include "gol/config.h"
 
 class App {
   public:

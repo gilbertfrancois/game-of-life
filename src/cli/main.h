@@ -15,8 +15,8 @@
 #ifndef GAMEOFLIFE_CLI_MAIN_H
 #define GAMEOFLIFE_CLI_MAIN_H
 
-#include "../lib/GameOfLifeKernel.h"
-#include "../lib/config.h"
+#include "gol/GameOfLifeKernel.h"
+#include "gol/config.h"
 
 void get_terminal_size(Config *config);
 

@@ -15,8 +15,8 @@
 #ifndef GAMEOFLIFE_GUI_MAIN_H
 #define GAMEOFLIFE_GUI_MAIN_H
 
-#include "../lib/config.h"
-#include "../lib/GameOfLifeKernel.h"
+#include "gol/config.h"
+#include "gol/GameOfLifeKernel.h"
 
 int parse_arguments(std::vector<std::string> args, Config *config);
 
