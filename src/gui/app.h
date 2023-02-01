@@ -35,8 +35,6 @@ class App {
   private:
     Config config;
     bool running;
-    int display_w;
-    int display_h;
     Uint32 steps_per_sec;
     Uint32 timer_fps;
     Uint32 time;

@@ -36,7 +36,7 @@ App::~App() {
 }
 
 void App::init_video() {
-    auto status = SDL_Init(SDL_INIT_VIDEO);
+    SDL_Init(SDL_INIT_VIDEO);
     SDL_DisplayMode mode;
     SDL_GetCurrentDisplayMode(0, &mode);
     std::cout << "Current display mode: "
