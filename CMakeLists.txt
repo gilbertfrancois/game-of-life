@@ -7,6 +7,7 @@ project(game-of-life)
 
 set(CMAKE_CXX_STANDARD 17)
 set(MY_PROJECT_DIR ${CMAKE_SOURCE_DIR})
+add_compile_options(-Wall -Werror) 
 
 # Make threading work on Linux
 if(UNIX AND NOT APPLE)
