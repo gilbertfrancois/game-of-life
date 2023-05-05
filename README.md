@@ -3,8 +3,8 @@ _Gilbert Francois Duivesteijn_
 
 This program shows the well known Game of Life. I've chosen this simulation as an exercise to explore:
 
-* Member function pointers as function arguments,
-* Concurrency, domain slicing and treating boundary conditions,
+* Member function pointers as function arguments.
+* Concurrency, domain slicing and treating boundary conditions.
 * Development of a multi platform, multi architecture console and graphical application.
 * Using [vcpkg](https://vcpkg.io) C/C++ cross platform dependency package manager as a [CMake](https://cmake.org) extension.
 
@@ -33,16 +33,14 @@ export VCPKG_FORCE_SYSTEM_BINARIES=arm
 
 The project uses [vcpkg dependency manager](https://vcpkg.io) and is included as a sub-repository in this project. It will automatically download and build libSDL2 for you. 
 
-When cloning the project, don't forget the `--recurse-submodules` option.
-
 ```sh
 # Clone the project
-git clone --recurse-submodules https://github.com/gilbertfrancois/game-of-life.git
+git clone https://github.com/gilbertfrancois/game-of-life.git
 
 cd game-of-life
 
-# Bootstrap vcpkg
-./3rdparty/vcpkg/bootstrap-vcpkg.sh
+# Important!
+git submodule update --init --recursive
 
 # Build the project and its dependencies
 mkdir build
